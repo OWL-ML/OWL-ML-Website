@@ -54,17 +54,30 @@ const headingId = 'join-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   p {
     color: var(--on-peach-muted);
   }
+  /* Phone: the heading beside the owl, text and button below at full width (Martin, November
+     2026). A grid rather than a flex column, which would turn the text's 420px basis into its
+     height. */
   @media (max-width: 720px) {
     .join {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 12px 16px;
       padding: 28px 24px;
-      flex-direction: column;
-      align-items: flex-start;
     }
     .owl {
-      height: 72px !important;
+      height: 64px !important;
+    }
+    .text {
+      display: contents;
+    }
+    .text > :global(*:not(h2)),
+    .join :global(.cta) {
+      grid-column: 1 / -1;
     }
     .join :global(.cta) {
       width: 100%;
+      margin-top: 8px;
     }
   }
 </style>

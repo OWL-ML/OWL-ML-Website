@@ -95,7 +95,7 @@ mono 12-13 px. Theme one-liners in italic body face.
 | University strip | `src/assets/brand/uni-bremen-logo.png` (white background only, unchanged; served at the size shown) |
 | Navigation bar | `owl-ml-logo.svg` (black strokes, on white) |
 | Hero figure card, bottom right | `owl.svg`, 108 px desktop / 56 px phone, "watching" the figure |
-| "Join us" bands (homepage thesis call, teaching, thesis contact box) | `owl.svg`, 72-130 px |
+| "Join us" bands (homepage thesis call, teaching, thesis contact box) | `owl.svg`, 72-130 px; on phones 64 px beside the heading, text and button below at full width |
 | Footer | `owl.svg` (the orange body carries it on dark teal) |
 | Favicon / touch icon | `owl.svg` |
 
@@ -154,8 +154,9 @@ mono 12-13 px. Theme one-liners in italic body face.
   appears as it is; reduced motion switches at once.
 - Labels need a white backing so edges don't run through them; theme labels may wrap to two
   lines (name, then one-liner in italics). Check the map with real data at 1440 px and 1024 px.
-- Phone: no graph; horizontally scrollable theme chips and a card with name, description, people
-  and the recent papers as a list.
+- Phone: no graph; theme and people chips wrap below their row label, all visible without
+  sideways scrolling (Martin, November 2026), and a card with name, description, people and the
+  recent papers as a list.
 
 ### Member profile (`Member`, `PhoneMember`)
 Teal hero with photo, name, role (in `--peach-light`), link pills. About card with bio and theme
@@ -201,7 +202,9 @@ text opens in place under "Read more" (`<details>`), and `/news/#<id>` opens it.
 show "Closed" after their deadline. Bento tiles without a figure preview the beginning of their
 text in the room their row leaves (plain text fading out, hidden from screen readers, which read
 the full text in "Read more"; five lines on phones); an opened text grows only its own tile, the
-others keep their closed height (Martin, November 2026).
+others keep their closed height (Martin, November 2026). One text is open at a time; when opening
+one closes an open text further up, that one closes at once and the page keeps the pressed
+"Read more" in place, so the page does not jump (Martin, November 2026).
 "Show earlier years" instead of pagination. RSS feed at `/news/rss.xml`.
 
 ## Motion

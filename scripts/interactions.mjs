@@ -301,6 +301,46 @@ await check(
   },
 );
 
+await check('news: opening a text below an open one keeps the page in place (phone)', async () => {
+  for (const reducedMotion of ['no-preference', 'reduce']) {
+    const p = await page({ viewport: { width: 390, height: 844 }, reducedMotion });
+    await p.goto(`${base}/news/archive/`);
+    const summaries = p.locator('details.more > summary:visible');
+    await summaries.nth(0).click();
+    await p.waitForTimeout(500);
+    const next = summaries.nth(1);
+    await next.evaluate((s) => s.scrollIntoView({ block: 'center' }));
+    const before = await next.evaluate((s) => s.getBoundingClientRect().top);
+    await next.click();
+    await p.waitForTimeout(500);
+    const after = await next.evaluate((s) => s.getBoundingClientRect().top);
+    assert.ok(Math.abs(after - before) <= 2, `${reducedMotion}: moved ${before} → ${after}`);
+    assert.equal(await p.locator('details.more[open]').count(), 1);
+    assert.deepEqual(p.errors, []);
+  }
+});
+
+await check('phone: map chips wrap; join band text starts right below the heading', async () => {
+  const p = await page({ viewport: { width: 390, height: 844 } });
+  await p.goto(`${base}/`);
+  const overflow = await p.evaluate(() =>
+    [...document.querySelectorAll('[data-map] .scroller')].map(
+      (s) => s.scrollWidth - s.clientWidth,
+    ),
+  );
+  assert.ok(
+    overflow.every((o) => o <= 1),
+    `chip rows scroll sideways: ${overflow}`,
+  );
+  const gap = await p.evaluate(() => {
+    const band = document.querySelector('.join');
+    const text = band.querySelector('p').getBoundingClientRect();
+    const cta = band.querySelector('.cta').getBoundingClientRect();
+    return cta.top - text.bottom;
+  });
+  assert.ok(gap < 40, `gap between text and button: ${gap}px`);
+});
+
 await check('no JavaScript: full lists and fallbacks, nothing broken', async () => {
   const p = await page({ javaScriptEnabled: false });
   await p.goto(`${base}/`);

@@ -599,7 +599,8 @@ const text: PanelText = {
     margin-top: 4px;
   }
 
-  /* Phone: no graph; scrollable theme chips and one card */
+  /* Phone: no graph; the chips wrap below their row label (all visible, no sideways
+     scrolling; Martin, November 2026) and one card */
   @media (max-width: 720px) {
     .map-card {
       padding: 0;
@@ -611,17 +612,7 @@ const text: PanelText = {
       display: none;
     }
     .chip-row {
-      flex-wrap: nowrap;
       width: 100%;
-    }
-    .row-label {
-      flex: none;
-    }
-    .scroller {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
     }
     .panel {
       background: var(--white);
