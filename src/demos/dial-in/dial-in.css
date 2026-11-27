@@ -1,0 +1,130 @@
+/* Dial in the espresso. Same visual language as the other demos, with tokens. */
+.di {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+.di-map-col {
+  flex: 3 1 440px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.di-side {
+  flex: 2 1 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.di-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.di-map {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--hairline);
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+.di-legend {
+  margin: 0;
+  font-size: 13px;
+  color: var(--body);
+}
+.di-shapes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.di-key {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: var(--ink);
+  border-radius: 50%;
+}
+.di-key.di-fast {
+  background: radial-gradient(circle, var(--white) 3px, var(--ink) 3.5px);
+}
+.di-key.di-slow {
+  border-radius: 2px;
+}
+.di-key.di-hint {
+  opacity: 0.4;
+}
+.di-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.di-slider-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.di-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 400;
+}
+.di-slider input {
+  width: 100%;
+  accent-color: var(--teal-600);
+}
+.di-predict {
+  margin: 0;
+  font-size: 14px;
+  color: var(--body);
+}
+.di-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.di-actions [aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.di-result {
+  margin: 0;
+  background: var(--teal-50);
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-height: 1.5em;
+}
+.di-result:empty {
+  display: none;
+}
+.di-left {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--body);
+}
+.di-shots {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 14px;
+  font-family: var(--font-mono);
+  color: var(--body);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.di-shots .di-good {
+  color: var(--teal-700);
+  font-weight: 600;
+}
+.di-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

@@ -1,0 +1,147 @@
+---
+// Larger research projects the lab is part of (src/data/projects.yml): kind, years, name, logo and a
+// one- or two-sentence summary of the research focus. Name and logo link to the project's own
+// website, which says who takes part (Martin, November 2026: no member lists here).
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { getProjects } from '../../lib/data';
+
+const logos = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/projects/*.{png,jpg,jpeg,webp,svg}',
+);
+// the largest box a logo may fill (desktop); phones scale it down in CSS
+const BOX = { w: 130, h: 64 };
+
+const projects = await Promise.all(
+  (await getProjects()).map(async (p) => {
+    const loader = logos[`../../assets/projects/${p.logo}`];
+    if (!loader)
+      throw new Error(`projects.yml: logo "${p.logo}" not found in src/assets/projects/`);
+    const logo = (await loader()).default;
+    const scale = Math.min(BOX.w / logo.width, BOX.h / logo.height);
+    const width = Math.round(logo.width * scale);
+    const height = Math.round(logo.height * scale);
+    return { ...p, image: logo, width, height };
+  }),
+);
+---
+
+{projects.length > 0 && (
+  <section class="container section" aria-labelledby="projects-h">
+    <h2 id="projects-h">Projects</h2>
+    <ul class="projects">
+      {projects.map((p) => (
+        <li class="card">
+          <div class="head">
+            <p class="kind">
+              {p.kind} ·{' '}
+              <span class="years">
+                {p.start}–{p.end}
+              </span>
+            </p>
+            <h3>
+              <a href={p.url}>
+                {p.name}
+                <span class="ext" aria-hidden="true">
+                  ↗
+                </span>
+              </a>
+            </h3>
+          </div>
+          {/* the same link as the name: hidden from keyboard and screen readers, so each
+              project is announced once */}
+          <a class="logo" href={p.url} tabindex="-1" aria-hidden="true">
+            <Picture
+              src={p.image}
+              alt=""
+              formats={['avif', 'webp']}
+              width={p.width}
+              height={p.height}
+              widths={[p.width, p.width * 2]}
+              sizes={`${p.width}px`}
+            />
+          </a>
+          <p class="summary">{p.summary}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .projects {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .card {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 22px 26px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'head logo'
+      'summary summary';
+    gap: 10px 20px;
+  }
+  .head {
+    grid-area: head;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .kind {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--teal-600);
+  }
+  h3 {
+    font-size: 24px;
+  }
+  h3 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  h3 a:hover {
+    text-decoration: underline;
+  }
+  .ext {
+    font-size: 0.7em;
+    color: var(--teal-600);
+    margin-left: 4px;
+  }
+  .logo {
+    grid-area: logo;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+  }
+  .logo :global(img) {
+    max-width: 130px;
+    max-height: 64px;
+    width: auto;
+    height: auto;
+  }
+  .summary {
+    grid-area: summary;
+    color: var(--body);
+  }
+  @media (max-width: 720px) {
+    .projects {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+    }
+    .card {
+      padding: 18px 20px;
+    }
+    .logo :global(img) {
+      max-width: 96px;
+      max-height: 48px;
+    }
+  }
+</style>

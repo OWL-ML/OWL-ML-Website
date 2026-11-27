@@ -1,0 +1,24 @@
+# build output
+dist/
+dist-offline/
+.astro/
+
+# dependencies
+node_modules/
+
+# logs and local files
+npm-debug.log*
+.env
+.env.*
+.DS_Store
+
+# test output
+test-results/
+playwright-report/
+screenshots/
+
+# never commit the raw WordPress export
+*.WordPress.*.xml
+
+# Python cache
+__pycache__/

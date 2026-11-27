@@ -1,0 +1,126 @@
+---
+import { getCollection, render } from 'astro:content';
+import { getPublications } from '../../lib/data';
+import { titledName } from '../../lib/format';
+import type { NewsEntry } from '../../lib/news';
+
+// The text of a news item, opened in place ("Read more"): news items have no pages of their
+// own. Works without JavaScript; one item is open at a time (`name`), and the script opens the
+// item a link points to (/news/#<id>).
+interface Props {
+  item: NewsEntry;
+}
+const { item } = Astro.props;
+const d = item.data;
+const { Content } = await render(item);
+const pub = d.paper ? (await getPublications()).find((p) => p.key === d.paper) : undefined;
+const people = (await getCollection('people')).filter((p) => d.people.includes(p.id));
+---
+
+<details class="more" name="news-more">
+  <summary>
+    Read more<span class="sr-only">: {d.title}</span>
+  </summary>
+  <div class="prose">
+    <Content />
+  </div>
+  {(pub || people.length > 0 || d.link) && (
+    <ul class="related">
+      {pub && (
+        <li>
+          <a href={`/publications/#${pub.key}`}>Paper: {pub.title} →</a>
+        </li>
+      )}
+      {people.map((p) => (
+        <li>
+          <a href={`/people/${p.id}/`}>{titledName(p.data)} →</a>
+        </li>
+      ))}
+      {d.link && (
+        <li>
+          <a href={d.link}>More information →</a>
+        </li>
+      )}
+    </ul>
+  )}
+</details>
+
+<script>
+  // A link to /news/#<id> opens that item's text (and "Show earlier years" around it).
+  const openTarget = () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const el = id ? document.getElementById(id) : null;
+    if (!el) return;
+    // around it (e.g. "Show earlier years") opens at once, so the scroll lands on the item
+    for (let p: HTMLElement | null = el; p; p = p.parentElement)
+      if (p instanceof HTMLDetailsElement) {
+        p.classList.add('instant');
+        p.open = true;
+      }
+    const more = el.querySelector<HTMLDetailsElement>('details.more');
+    if (more) more.open = true;
+    el.scrollIntoView();
+  };
+  openTarget();
+  window.addEventListener('hashchange', openTarget);
+</script>
+
+<style>
+  .more summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--teal-600);
+    width: fit-content;
+  }
+  .more[open] summary {
+    margin-bottom: 10px;
+  }
+  /* the text slides open and closed (Martin, November 2026); browsers without
+     ::details-content or interpolate-size open it at once, and reduced motion stops it */
+  .more {
+    interpolate-size: allow-keywords;
+  }
+  .more::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition:
+      block-size 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      content-visibility 0.35s allow-discrete;
+  }
+  .more[open]::details-content {
+    block-size: auto;
+  }
+  /* the site-wide reduced-motion rule (base.css) does not reach this pseudo-element; kept apart
+     so browsers that do not know ::details-content do not drop the global rule */
+  @media (prefers-reduced-motion: reduce) {
+    .more::details-content {
+      transition: none;
+    }
+  }
+  .more summary {
+    transition: margin-bottom 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .prose {
+    color: inherit;
+    font-size: 15px;
+    line-height: var(--line-body);
+  }
+  .prose :global(p + p) {
+    margin-top: 0.8em;
+  }
+  .prose :global(ul) {
+    padding-left: 1.2em;
+    list-style: disc;
+  }
+  .related {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+</style>

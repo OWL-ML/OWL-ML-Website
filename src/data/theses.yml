@@ -1,0 +1,22 @@
+# From the current Theses/Internships page (owl-ml.com/theses, read 7 Oct 2026).
+# Titles of ongoing theses are working titles. Theme tags reviewed by Martin (October 2026).
+# archive: true = supervised at TU Darmstadt before the move to Bremen; listed only on
+# /theses/archive/, without theme tags.
+- { student: Maximilian Neumann, title: "From One Robot to Many: Progressive Probabilistic Circuits for Skill Transfer in Robot Simulation", degree: MSc, status: ongoing, institution: Universität Bremen, themes: [gd, cl] }
+- { student: Mohamed Amine Kina, title: Delta-Memory Construction for Continual Learning, degree: MSc, status: ongoing, institution: Universität Bremen, themes: [mc, cl] }
+- { student: Christian Penner, title: Unlearning Confounders in Continual ML, degree: MSc, status: ongoing, institution: Universität Bremen, themes: [cl] }
+- { student: Michel Ruge, title: Rational Neuron Regularization in Continual Learning, degree: MSc, status: ongoing, institution: Universität Bremen, themes: [cl] }
+- { student: Etienne Steuer, title: Model Merging of Differently Sized Neural Networks, degree: BSc, status: completed, date: 2026, institution: Universität Bremen, themes: [mc] }
+- { student: Raven Hölting, title: Context-dependent Token Reduction for Language Models, degree: MSc, status: completed, date: 2026, institution: Universität Bremen, themes: [mc] }
+- { student: Oliver Böse, title: Tracing the Evolution of Fairness in AI-Face Detection Using Continual Learning, degree: BSc, status: completed, date: 2026-02, institution: Universität Bremen, themes: [cl, pai] }
+- { student: Lara Munderloh, title: Continual Semantic Segmentation for Urban Surfaces, degree: MSc, status: completed, date: 2025-12, institution: Universität Bremen, themes: [cl] }
+- { student: Ronja Schloen, title: Detecting Anomalies in Critical Infrastructure with Generative Models, degree: MSc, status: completed, date: 2025-12, institution: Universität Bremen, themes: [gd] }
+- { student: Robin Menzenbach, title: Self-Expanding Variational Autoencoders, degree: MSc, status: completed, date: 2024-03, institution: TU Darmstadt, archive: true }
+- { student: Nick Lemke, title: Distribution-Aware Replay for Continual MRI Segmentation, degree: MSc, status: completed, date: 2024, institution: TU Darmstadt, note: "co-supervised with Anirban Mukhopadhyay (GRIS, TU Darmstadt)", archive: true }
+- { student: Patrick Vimr, title: Continual Causal Knowledge Distillation, degree: MSc, status: completed, date: 2023-12, institution: TU Darmstadt, archive: true }
+- { student: Aleksandar Tatalovic, title: Continual Reinforcement Learning by Merging Models, degree: BSc, status: completed, date: 2023-10, institution: TU Darmstadt, archive: true }
+- { student: Tobias Gockel, title: Knowledge Distillation for Continual Learning in Sum Product Networks, degree: MSc, status: completed, date: 2023-09, institution: TU Darmstadt, archive: true }
+- { student: Uranik Berisha, title: Progressive Probabilistic Circuits, degree: MSc, status: completed, date: 2023-05, institution: TU Darmstadt, archive: true }
+- { student: Laura Boyette, title: Deep Continual Learning with Intentional Forgetting, degree: MSc, status: completed, date: 2023-05, institution: TU Darmstadt, archive: true }
+- { student: Zhanke Liu, title: Self-supervised Learning for Financial Time-Series Prediction via Transformers, degree: MSc, status: completed, date: 2023-04, institution: TU Darmstadt, archive: true }
+- { student: Yves Neyraud, title: Active Latent Space Packing for Variational Open World Learning, degree: MSc, status: completed, date: 2022-02, institution: TU Darmstadt, archive: true }

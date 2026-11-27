@@ -1,0 +1,107 @@
+---
+import { getThemes } from '../../lib/themes';
+
+// A seminar's guiding questions (courses.yml `dimensions`, docs/DEMOS.md): the readings change
+// every run, these stay. One disclosure per dimension with its questions and a link to the lab's
+// publications in the theme it belongs to: open from the start, each can be collapsed. Boxes in a
+// row share one width and the height of the tallest. Complete without JavaScript.
+interface Props {
+  dimensions: { name: string; questions: string; theme?: string; link_label?: string }[];
+  /** shown below the seminar's demo: the lead then refers to it */
+  demo?: boolean;
+}
+const { dimensions, demo = false } = Astro.props;
+const themeById = new Map((await getThemes()).map((t) => [t.id, t]));
+---
+
+<div class="dims">
+  <p class="dims-lead">
+    This is a reading seminar. Students read, present and discuss recent research papers
+    {demo ? ', and the demo above gives a taste of the kind of question they examine' : ''}. The
+    papers change every semester, while the guiding questions below stay the same.
+  </p>
+  {dimensions.length > 0 ? (
+    <ul>
+      {dimensions.map((d) => {
+        const t = d.theme ? themeById.get(d.theme) : undefined;
+        return (
+          <li>
+            <details open>
+              <summary>{d.name}</summary>
+              <p>{d.questions}</p>
+              {t && (
+                <a class="more-link" href={`/publications/?theme=${t.id}`}>
+                  Our work on {d.link_label ?? t.name} →
+                </a>
+              )}
+            </details>
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <p class="placeholder">[Guiding questions to be added]</p>
+  )}
+</div>
+
+<style>
+  .dims {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .dims-lead {
+    margin: 0;
+    color: var(--body);
+    max-width: 680px;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  details {
+    height: 100%;
+    background: var(--teal-50);
+    border-radius: var(--radius-card-sm);
+    padding: 12px 16px;
+  }
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+  details[open] {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  details p {
+    margin: 8px 0 0;
+    font-size: 15px;
+    color: var(--body);
+  }
+  /* the link sits at the bottom of its box, so the links of a row line up. Browsers that wrap
+     the content of <details> in ::details-content need the column layout on that wrapper too. */
+  details[open]::details-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  details a {
+    margin-top: auto;
+  }
+  @media (max-width: 1000px) {
+    ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 560px) {
+    ul {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

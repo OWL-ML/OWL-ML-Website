@@ -1,0 +1,115 @@
+---
+import { Font } from 'astro:assets';
+import '../styles/base.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { site } from '../lib/site';
+
+interface Props {
+  /** Page title; " · OWL-ML" is appended unless this is the homepage */
+  title?: string;
+  description?: string;
+  /** Navigation id of the current section (src/lib/nav.ts) */
+  current?: string;
+  lang?: 'en' | 'de';
+  /** Keep the page out of search engines and the sitemap (e.g. the 404 page) */
+  noindex?: boolean;
+  germanHref?: string;
+  /** share image (src/pages/og/); by default the image of the page's section */
+  ogImage?: string;
+}
+const {
+  title,
+  description = site.mission.replace(/\s+/g, ' ').trim(),
+  current,
+  lang = 'en',
+  noindex = false,
+  germanHref,
+  ogImage,
+} = Astro.props;
+const fullTitle = title ? `${title} · ${site.short}` : `${site.short} · ${site.name}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const sections = ['people', 'publications', 'teaching', 'theses', 'news'];
+const shareImage = new URL(
+  ogImage ?? `/og/${current && sections.includes(current) ? current : 'home'}.png`,
+  Astro.site,
+);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      // Marks that JavaScript runs, so interactive parts can replace their static fallbacks.
+      document.documentElement.classList.add('js');
+      // Page transitions (base.css): when leaving a page scrolled away from the top, the header
+      // is out of view, so it fades with the page instead of sliding in.
+      window.addEventListener('pageswap', () => {
+        document.documentElement.classList.toggle('vt-scrolled', window.scrollY > 80);
+      });
+    </script>
+    <title>{fullTitle}</title>
+    {/* the body text and headline fonts are fetched first; the rest when a page uses them */}
+    <Font
+      cssVariable="--font-plex-sans"
+      preload={[
+        { weight: '400', style: 'normal', subset: 'latin' },
+        { weight: '600', style: 'normal', subset: 'latin' },
+      ]}
+    />
+    <Font cssVariable="--font-bricolage" preload={[{ weight: '700', subset: 'latin' }]} />
+    <Font cssVariable="--font-plex-mono" />
+    <meta name="description" content={description} />
+    {/* pages kept out of search engines (the 404 page) have no canonical address */}
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="OWL-ML news" href="/news/rss.xml" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <meta name="theme-color" content="#1F4A47" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {!noindex && <meta property="og:url" content={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:image" content={shareImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${title ?? site.name} · ${site.short}`} />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
+    <SiteHeader current={current} germanHref={germanHref} />
+    <main id="main" tabindex="-1">
+      <slot name="band" />
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    left: 16px;
+    top: -100px;
+    z-index: 100;
+    padding: 12px 20px;
+    border-radius: var(--radius-pill);
+    background: var(--teal-700);
+    color: var(--white);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .skip-link:focus {
+    top: 12px;
+  }
+  main:focus {
+    outline: none;
+  }
+</style>

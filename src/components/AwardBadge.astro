@@ -1,0 +1,38 @@
+---
+// Awards are orange pills; spotlight/oral-type labels are teal-200 pills.
+interface Props {
+  kind?: 'award' | 'spotlight';
+  size?: 'sm' | 'md';
+  class?: string;
+}
+const { kind = 'award', size = 'sm', class: cls } = Astro.props;
+---
+
+<span class:list={['badge', `badge-${kind}`, `badge-${size}`, cls]}>
+  <slot />
+</span>
+
+<style>
+  .badge {
+    display: inline-block;
+    align-self: flex-start;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.4;
+    border-radius: var(--radius-pill);
+  }
+  .badge-sm {
+    padding: 4px 12px;
+  }
+  .badge-md {
+    padding: 6px 14px;
+  }
+  .badge-award {
+    background: var(--orange);
+    color: var(--on-orange);
+  }
+  .badge-spotlight {
+    background: var(--teal-200);
+    color: var(--teal-800);
+  }
+</style>

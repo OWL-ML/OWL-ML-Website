@@ -1,0 +1,11 @@
+---
+date: 2026-11-01
+type: paper
+title: "New preprint: Spectral Signatures of Memorization Basins in Diffusion Trajectories"
+paper: jaziri2026spectral
+---
+Our new preprint "[Spectral Signatures of Memorization Basins in Diffusion Trajectories](https://arxiv.org/abs/2611.01775)" is now online.
+
+Diffusion models are known to reproduce individual examples from their training data as a form of memorization with implications for generalization, privacy, and downstream use. Recent work demonstrated that memorized training samples reside inside contiguous regions of the data/latent space known as basins of memorization -- once a denoising trajectory enters a basin, under finite perturbations it irreversibly reproduces a memorized example. Prior empirical work on such basins in trained models has primarily focused on classifier-free guidance based detection and mitigation strategies in text-to-image models, leaving basin entry and their formation largely uncharacterized. In this paper, we present a geometric characterization of memorization basins for conditional, unconditional, and rectified-flow-based diffusion models. We observe a characteristic signature in the local spectrum of the function geometry that distinguishes basin entry: the emergence of a dominant singular mode followed by a sharp spectral recovery. This signature appears at two timescales: along denoising trajectories during inference and over the course of training. We further investigate whether these geometric signatures can be used to intervene on memorization. During training, we suppress memorization by acting on the dominant mode. At inference, we develop methods to identify trajectories entering memorization basins and steer them away. We find that these interventions remain effective even with low-dimensional approximations of the underlying geometry, and demonstrate that geometry-informed steering extends to large-scale text-to-image diffusion models. Together, our results corroborate that local spectral geometry provides a common basis for characterizing memorization and for suppressing, detecting, and steering away from it across training and generation.
+
+For more information, [read the full paper](https://arxiv.org/abs/2611.01775).

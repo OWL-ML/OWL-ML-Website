@@ -1,0 +1,81 @@
+---
+// One year group in a list: the year in the left column, the items on the right.
+// Phones stack the year above its items.
+interface Props {
+  label: string;
+  /** heading level of the year label */
+  level?: 2 | 3;
+  /** md: publications (88 px), sm: profiles (72 px), wide: month timelines (130 px),
+   *  thesis: thesis list (110 px, fits "Ongoing") */
+  size?: 'md' | 'sm' | 'wide' | 'thesis';
+  /** 'accent' colours the label teal ("Ongoing" in the thesis list) */
+  tone?: 'year' | 'accent';
+  id?: string;
+  [key: `data-${string}`]: unknown;
+}
+const { label, level = 2, size = 'md', tone = 'year', id, ...rest } = Astro.props;
+const H = `h${level}` as 'h2' | 'h3';
+---
+
+<section class:list={['year-rail', `size-${size}`, `tone-${tone}`]} id={id} {...rest}>
+  <H class="year">{label}</H>
+  <div class="items">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .year-rail {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 8px 32px;
+  }
+  .size-sm {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 8px 28px;
+  }
+  .size-wide {
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 8px 28px;
+  }
+  .size-thesis {
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 8px 28px;
+  }
+  .year {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--year);
+    padding-top: 6px;
+  }
+  .size-sm .year {
+    font-size: 28px;
+  }
+  .size-wide .year,
+  .size-thesis .year {
+    font-size: 26px;
+  }
+  .tone-accent .year {
+    color: var(--teal-600);
+  }
+  .items {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+  @media (max-width: 720px) {
+    .year-rail,
+    .size-sm,
+    .size-wide,
+    .size-thesis {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .year {
+      font-size: 24px;
+      padding-top: 0;
+    }
+  }
+</style>

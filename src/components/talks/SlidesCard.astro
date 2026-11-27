@@ -1,0 +1,84 @@
+---
+import SlideThumb from './SlideThumb.astro';
+import type { ImageMetadata } from 'astro';
+
+// Slides or a poster: first-page thumbnail, kind badge, date/event, speakers, links, Zenodo DOI.
+interface Props {
+  title: string;
+  meta: string;
+  kind: 'slides' | 'poster';
+  speakers: { name: string; href?: string }[];
+  file?: string;
+  recording?: string;
+  thumbnail?: ImageMetadata;
+}
+const { title, meta, kind, speakers, file, recording, thumbnail } = Astro.props;
+const doi = file?.match(/10\.5281\/zenodo\.[\w[\]]+/)?.[0];
+---
+
+<article class="slides">
+  <SlideThumb image={thumbnail} title={title} kind={kind} />
+  <div class="body">
+    <p class="meta">{meta}</p>
+    <h3>{title}</h3>
+    <p class="speakers">
+      {speakers.map((s, i) => (
+        <>
+          {s.href ? <a href={s.href}>{s.name}</a> : <span>{s.name}</span>}
+          {i < speakers.length - 1 && ', '}
+        </>
+      ))}
+    </p>
+    <div class="links">
+      {file && <a href={file}>{kind === 'poster' ? 'Poster' : 'Slides'} (PDF)</a>}
+      {doi && <span class="doi">DOI {doi}</span>}
+      {recording && <a href={recording}>Recording</a>}
+    </div>
+  </div>
+</article>
+
+<style>
+  .slides {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 6px 10px;
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-size: 21px;
+    line-height: 1.2;
+  }
+  .speakers {
+    font-weight: 600;
+  }
+  .speakers a {
+    color: var(--ink);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    font-weight: 600;
+    font-size: 15px;
+    margin-top: 6px;
+  }
+  .doi {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 400;
+    background: var(--teal-200);
+    color: var(--teal-800);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+</style>

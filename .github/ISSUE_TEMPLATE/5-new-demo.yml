@@ -1,0 +1,47 @@
+name: New course demo
+description: Propose an interactive demo for a course (docs/DEMOS.md, "Adding a new demo").
+title: 'Demo: '
+labels: [demo]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Demos are small, focused and honest about what they simplify. Their address
+        (`/teaching/demos/<slug>/`) is printed in slides, so it never changes once used.
+        Martin decides which demos are built.
+  - type: input
+    id: course
+    attributes:
+      label: Course and lecture
+      description: The course id from `src/data/courses.yml` and the lecture it belongs to.
+      placeholder: llml, lecture 4
+    validations:
+      required: true
+  - type: textarea
+    id: learning
+    attributes:
+      label: The one thing a student should discover
+      description: One sentence.
+    validations:
+      required: true
+  - type: textarea
+    id: interaction
+    attributes:
+      label: The interaction
+      description: The knob, the prediction to make, or the baseline that fails.
+    validations:
+      required: true
+  - type: textarea
+    id: real
+    attributes:
+      label: What must be real
+      description: Data, constants or measured behaviour, and where each comes from.
+    validations:
+      required: true
+  - type: textarea
+    id: simplified
+    attributes:
+      label: What it must not suggest
+      description: Simplifications the demo text has to state.
+    validations:
+      required: true

@@ -1,0 +1,104 @@
+---
+// Accessibility statement (BremBGG / BITV 2.0), after the University of Bremen's own statement
+// (https://www.uni-bremen.de/en/accessibility): its structure and fixed wording (introduction,
+// reporting barriers, enforcement) are taken over; status, barriers and method describe this
+// site. Decided by Martin (November 2026): English, "partially compliant" (no independent BITV
+// test yet), four known barriers, reports to the lab email. Update the date when the site's
+// accessibility changes or a test is done.
+import LegalPage from '../layouts/LegalPage.astro';
+import { site, contactEmail } from '../lib/site';
+import { DEFAULT_SITE_URL } from '../lib/site-url';
+
+const siteUrl = new URL(Astro.site ?? DEFAULT_SITE_URL).hostname;
+---
+
+<LegalPage
+  title="Accessibility statement"
+  lead="How accessible this website is, and how to report barriers"
+  lang="en"
+>
+  <p>
+    We strive to make this website accessible. The declaration of accessibility is required by the
+    Bremen Equal Opportunities for Disabled Persons Act (BremBGG). The technical requirements for
+    accessibility are derived from the Barrier-Free Information Technology Ordinance (BITV 2.0).
+    This declaration on digital accessibility applies to the website of the {site.name} (
+    {site.short}), {siteUrl}.
+  </p>
+
+  <h2>How accessible is the site?</h2>
+  <p>
+    This website is partially compliant with the requirements of BITV 2.0. It was designed to meet
+    the Web Content Accessibility Guidelines (WCAG) 2.1 at level AA, on which BITV 2.0 is based: it
+    can be used by keyboard, has visible focus, text alternatives for images and sufficient colour
+    contrast, and it respects the setting for reduced motion. It has not yet been tested by an
+    independent body. The exceptions known to us are listed below.
+  </p>
+
+  <h2>Which areas are not barrier-free?</h2>
+
+  <h3>1. Easy German and German Sign Language</h3>
+  <p>
+    a) Description: This website has no explanations in Easy German (Leichte Sprache) or German Sign
+    Language.
+  </p>
+  <p>
+    b) Measures: The University of Bremen provides its{' '}
+    <a
+      href="https://www.uni-bremen.de/erklaerung-zur-barrierefreiheit-in-leichter-sprache"
+      lang="de"
+    >
+      declaration of accessibility in Easy German
+    </a>
+    .
+  </p>
+
+  <h3>2. Videos</h3>
+  <p>
+    a) Description: Videos are embedded from YouTube. Whether they have subtitles depends on the
+    video.
+  </p>
+  <p>
+    b) Measures: Each video can also be opened directly on YouTube, where available subtitles and
+    transcripts can be used.
+  </p>
+
+  <h3>3. External documents</h3>
+  <p>
+    a) Description: Papers, slides and other documents linked from this website are published by
+    other providers (for example publishers, arXiv or Zenodo). We cannot ensure their accessibility.
+  </p>
+  <p>b) Measures: If you need content in an accessible form, please contact us (see below).</p>
+
+  <h3>4. Interactive demos and the research map</h3>
+  <p>
+    a) Description: The course demos and the research map are visual and interactive. They can be
+    operated by keyboard, but screen readers may not convey everything they show.
+  </p>
+  <p>
+    b) Measures: Each demo page explains in text what the demo shows. The research themes of each
+    member are also listed as text on their profile.
+  </p>
+
+  <h2>When and how was the declaration of accessibility created?</h2>
+  <p>
+    This declaration was created on 17 November 2026. It is based on a self-assessment: whenever the
+    website changes, every page is checked automatically for accessibility problems (with axe-core)
+    at desktop and phone widths, and the interactive parts are tested for keyboard use.
+  </p>
+
+  <h2>Do you want to report barriers?</h2>
+  <p>
+    We would like to further improve our services. Feel free to share your digital accessibility
+    issues and questions with us via email at{' '}
+    {contactEmail ? (
+      <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+    ) : (
+      <span class="ph">[lab email]</span>
+    )}
+    . If we cannot resolve your concern, you can then turn to Bremen's{' '}
+    <a href="https://www.behindertenbeauftragter.bremen.de/der-beauftragte/zentralstelle-fuer-barrierefreie-informationstechnik-28011">
+      Central Office for Accessible Information Technology
+    </a>
+    , which also provides information on the enforcement procedure.
+  </p>
+</LegalPage>

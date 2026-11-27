@@ -1,0 +1,305 @@
+---
+import { Picture } from 'astro:assets';
+import uniLogo from '../assets/brand/uni-bremen-logo.png';
+import Icon from './Icon.astro';
+import { nav } from '../lib/nav';
+
+interface Props {
+  /** id of the current section, underlined in orange (see src/lib/nav.ts) */
+  current?: string;
+  /** address of the German version of this page. The site is English only for now (Martin,
+   *  November 2026): the EN/DE switch appears only on pages that have a German version. */
+  germanHref?: string;
+}
+const { current, germanHref } = Astro.props;
+---
+
+<header class="site-header" data-menu="closed">
+  <div class="uni-strip">
+    <div class="container uni-inner">
+      <a class="uni" href="https://www.uni-bremen.de/en/">
+        <Picture
+          src={uniLogo}
+          alt="Universität Bremen"
+          formats={['avif', 'webp']}
+          width={112}
+          height={40}
+          widths={[112, 224]}
+          sizes="112px"
+          loading="eager"
+          class="uni-logo"
+        />
+        <span class="faculty">
+          Faculty 3
+          <span class="faculty-long">
+            <br />
+            Mathematics and Computer Science
+          </span>
+        </span>
+      </a>
+      {germanHref && (
+        <div class="lang" aria-label="Language">
+          <span class="lang-current" aria-current="true" lang="en">
+            EN
+          </span>
+          <a href={germanHref} lang="de" hreflang="de">
+            DE
+          </a>
+        </div>
+      )}
+    </div>
+  </div>
+  <div class="nav-bar">
+    <nav class="container nav-inner" aria-label="Main">
+      <a href="/" class="home" aria-label="OWL-ML home">
+        <img src="/brand/owl-ml-logo.svg" alt="OWL-ML" width="1225" height="330" class="wordmark" />
+      </a>
+      <button class="menu-button" type="button" aria-expanded="false" aria-controls="main-menu">
+        <span class="icon-open">
+          <Icon name="menu" size={22} />
+        </span>
+        <span class="icon-close">
+          <Icon name="close" size={22} />
+        </span>
+        <span class="sr-only">Menu</span>
+      </button>
+      <ul class="nav-links" id="main-menu">
+        {nav.map((item) => (
+          <li>
+            <a href={item.href} aria-current={item.id === current ? 'page' : undefined}>
+              {item.label}
+              {item.id === current && <span class="nav-indicator" aria-hidden="true" />}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<script>
+  // Phone menu. Without JavaScript the links simply wrap below the wordmark. With JavaScript the
+  // menu is collapsed by CSS from the first paint (the `js` class is set in the <head>), so the
+  // page does not jump when this script runs.
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const button = header?.querySelector<HTMLButtonElement>('.menu-button');
+  if (header && button) {
+    const setOpen = (open: boolean) => {
+      header.dataset.menu = open ? 'open' : 'closed';
+      button.setAttribute('aria-expanded', String(open));
+    };
+    button.addEventListener('click', () => setOpen(header.dataset.menu !== 'open'));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && header.dataset.menu === 'open') {
+        setOpen(false);
+        button.focus();
+      }
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    position: relative;
+    background: var(--white);
+    z-index: 10;
+    view-transition-name: site-header; /* stays in place between pages (base.css) */
+  }
+  .uni-strip {
+    border-bottom: 1px solid #ecefed;
+  }
+  .uni-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px 24px;
+    padding-block: 10px;
+  }
+  .uni {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: var(--body);
+    text-decoration: none;
+  }
+  .uni-logo {
+    height: 40px;
+    width: auto;
+  }
+  .faculty {
+    font-size: 14px;
+    line-height: 1.35;
+    padding-left: 18px;
+    border-left: 1px solid #d3e5e0;
+  }
+  .lang {
+    display: flex;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  .lang-current {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .lang a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .nav-bar {
+    border-bottom: 1px solid #d3e5e0;
+  }
+  .nav-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px 32px;
+    padding-block: 16px;
+  }
+  .home {
+    display: flex;
+    padding-block: 4px;
+  }
+  .wordmark {
+    height: 46px;
+    width: auto;
+  }
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .nav-links a {
+    display: block;
+    padding-block: 10px;
+    color: var(--body);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+  }
+  .nav-links a:hover {
+    color: var(--ink);
+  }
+  .nav-links a[aria-current='page'] {
+    color: var(--ink);
+    position: relative;
+  }
+  /* the orange underline of the current section: an element of its own, so that on a page change
+     it glides from the old section to the new one (view transition, base.css) */
+  .nav-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    height: 2px;
+    background: var(--orange);
+    view-transition-name: nav-indicator;
+  }
+  .menu-button {
+    display: none;
+  }
+
+  @media (max-width: 860px) {
+    .uni-inner {
+      padding-block: 8px;
+    }
+    .uni-logo {
+      height: 30px;
+    }
+    .faculty {
+      font-size: 12px;
+      color: var(--muted);
+      border: 0;
+      padding: 0;
+    }
+    .faculty-long {
+      display: none;
+    }
+    .lang {
+      display: none;
+    }
+    .uni {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .nav-inner {
+      padding-block: 8px 12px;
+    }
+    .wordmark {
+      height: 34px;
+    }
+    :global(.js) .menu-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--teal-300);
+      background: var(--white);
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .menu-button .icon-close,
+    [data-menu='open'] .menu-button .icon-open {
+      display: none;
+    }
+    [data-menu='open'] .menu-button .icon-close {
+      display: block;
+    }
+    /* The menu panel keeps its look while closed (it is not displayed then), so that it can slide
+       down when opened and back up when closed (Martin, November 2026); the global
+       reduced-motion rule makes both instant */
+    :global(.js) .nav-links {
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      padding: 12px var(--gutter) 24px;
+      background: var(--teal-700);
+      border-top: 1px solid var(--teal-line-dark);
+      opacity: 0;
+      transform: translateY(-10px);
+      transition:
+        opacity 0.22s ease,
+        transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+        display 0.28s allow-discrete;
+    }
+    :global(.js) [data-menu='open'] .nav-links {
+      display: flex;
+      opacity: 1;
+      transform: none;
+    }
+    @starting-style {
+      :global(.js) [data-menu='open'] .nav-links {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+    }
+    :global(.js) .nav-links a {
+      color: var(--white);
+      font-family: var(--font-display);
+      font-size: 24px;
+      padding-block: 12px;
+      border-bottom: 1px solid var(--teal-line-dark);
+      margin: 0;
+    }
+    :global(.js) .nav-links a[aria-current='page'] {
+      color: var(--peach-light);
+    }
+    :global(.js) .nav-indicator {
+      display: none;
+    }
+    :global(.js) .nav-links a:focus-visible {
+      outline-color: var(--peach-light);
+    }
+  }
+</style>

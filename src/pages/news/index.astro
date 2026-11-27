@@ -1,0 +1,308 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import YearRail from '../../components/YearRail.astro';
+import NewsTile from '../../components/news/NewsTile.astro';
+import NewsRow from '../../components/news/NewsRow.astro';
+import { getNews, groupBy } from '../../lib/data';
+import { formatMonthLong } from '../../lib/format';
+import { newsFilters } from '../../lib/news';
+
+// Latest five as a bento grid, then a month timeline. Items older than a year (counted from the
+// newest item) sit behind "Show earlier years" instead of pagination. With JavaScript, the type
+// filter (?type=papers) replaces both with one timeline of that type. News from before the move
+// to Bremen (site.yml: news_archive_before) is on /news/archive/ instead, a backup page that is
+// not linked from the site (old links to archived items still lead there). Items have no pages of
+// their own: their text opens in place, and /news/#<id> leads to an item.
+const news = await getNews();
+const latest = news.slice(0, 5);
+const rest = news.slice(5);
+const newest = news[0]?.data.date ?? '';
+const cutoff = newest ? `${Number(newest.slice(0, 4)) - 1}${newest.slice(4)}` : '';
+const recent = rest.filter((n) => n.data.date > cutoff);
+const older = rest.filter((n) => n.data.date <= cutoff);
+const months = (items: typeof news) => groupBy(items, (n) => n.data.date.slice(0, 7));
+---
+
+<BaseLayout
+  title="News"
+  current="news"
+  description="Papers, people, projects and opportunities from the OWL-ML lab."
+>
+  <PageHero
+    slot="band"
+    title="News"
+    lead="Papers, people, projects and opportunities from the lab."
+  />
+
+  <div class="container page">
+    <div class="type-filter js-only" role="group" aria-label="Show news by type" data-news-filter>
+      {newsFilters.map((f, i) => (
+        <button
+          type="button"
+          class="tchip"
+          data-filter={f.id}
+          data-types={f.types.join(' ')}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
+    <p class="sr-only" aria-live="polite" data-news-status></p>
+
+    <section class="timeline filtered" aria-labelledby="filtered-h" data-news-filtered hidden>
+      <h2 id="filtered-h" data-filtered-title>
+        News
+      </h2>
+      {months(news).map(([m, items]) => (
+        <YearRail label={formatMonthLong(m)} size="wide" level={3} data-month>
+          {items.map((n) => (
+            <NewsRow item={n} />
+          ))}
+        </YearRail>
+      ))}
+    </section>
+
+    <section aria-labelledby="latest-h" data-news-default>
+      <h2 id="latest-h" class="sr-only">
+        Latest
+      </h2>
+      <div class="bento">
+        {latest.map((n, i) => (
+          <NewsTile item={n} large={i === 0} />
+        ))}
+      </div>
+    </section>
+
+    {recent.length > 0 && (
+      <section class="timeline" aria-labelledby="earlier-h" data-news-default>
+        <h2 id="earlier-h">Earlier</h2>
+        {months(recent).map(([m, items]) => (
+          <YearRail label={formatMonthLong(m)} size="wide" level={3}>
+            {items.map((n) => (
+              <NewsRow item={n} anchor />
+            ))}
+          </YearRail>
+        ))}
+      </section>
+    )}
+
+    {older.length > 0 && (
+      <details class="older" data-news-default>
+        <summary>
+          <span class="btn-like">Show earlier years</span>
+        </summary>
+        <div class="timeline">
+          {months(older).map(([m, items]) => (
+            <YearRail label={formatMonthLong(m)} size="wide" level={3}>
+              {items.map((n) => (
+                <NewsRow item={n} anchor />
+              ))}
+            </YearRail>
+          ))}
+        </div>
+      </details>
+    )}
+  </div>
+</BaseLayout>
+
+<script>
+  import { animateChange, transitionName } from '../../lib/motion';
+
+  // Bento grid: an opened "Read more" grows only its own tile; the other tiles keep the height
+  // they have while every text is closed (Martin, November 2026). A grid row is as tall as its
+  // tallest tile, so the neighbours of an opened tile are held at their closed height. To measure
+  // that, the opened text is hidden for a moment (class "measuring") instead of being closed, so
+  // no toggle events fire. Without JavaScript the tiles of a row simply grow together.
+  const bento = document.querySelector<HTMLElement>('.bento');
+  const tiles = bento ? ([...bento.children] as HTMLElement[]) : [];
+  const fitTiles = () => {
+    for (const t of tiles) {
+      t.style.height = '';
+      t.style.alignSelf = '';
+    }
+    const open = tiles.find((t) => t.querySelector('details.more[open]'));
+    if (!open || !bento || bento.offsetParent === null) return;
+    open.classList.add('measuring');
+    const closed = tiles.map((t) => t.getBoundingClientRect().height); // exact, not rounded
+    open.classList.remove('measuring');
+    tiles.forEach((t, i) => {
+      if (t === open) return;
+      t.style.height = `${closed[i]}px`;
+      t.style.alignSelf = 'start';
+    });
+  };
+  // react as soon as a text opens or closes, before the browser draws: the toggle event comes a
+  // moment later, which showed the neighbours stretched for one frame
+  if (bento)
+    new MutationObserver(fitTiles).observe(bento, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['open'],
+    });
+  let resizeTimer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(fitTiles, 150);
+  });
+  fitTiles();
+
+  // News type filter: "Everything" shows the bento grid and timeline; any other type shows one
+  // timeline of that type. The choice is kept in the URL (?type=people).
+  const bar = document.querySelector<HTMLElement>('[data-news-filter]');
+  if (bar) {
+    const chips = [...bar.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const defaults = [...document.querySelectorAll<HTMLElement>('[data-news-default]')];
+    const filtered = document.querySelector<HTMLElement>('[data-news-filtered]')!;
+    const title = filtered.querySelector<HTMLElement>('[data-filtered-title]')!;
+    const status = document.querySelector<HTMLElement>('[data-news-status]')!;
+    const rows = [...filtered.querySelectorAll<HTMLElement>('[data-type]')];
+    const months = [...filtered.querySelectorAll<HTMLElement>('[data-month]')];
+    const show = (id: string, updateUrl = true) => {
+      const chip = chips.find((c) => c.dataset.filter === id) ?? chips[0]!;
+      const types = (chip.dataset.types ?? '').split(' ').filter(Boolean);
+      const all = types.length === 0;
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+      defaults.forEach((el) => (el.hidden = !all));
+      filtered.hidden = all;
+      rows.forEach((r) => (r.hidden = !types.includes(r.dataset.type!)));
+      months.forEach((m) => (m.hidden = !m.querySelector('[data-type]:not([hidden])')));
+      title.textContent = chip.textContent!.trim();
+      status.textContent = all
+        ? 'Showing all news.'
+        : `Showing ${chip.textContent!.trim().toLowerCase()}.`;
+      if (updateUrl) {
+        const url = new URL(location.href);
+        if (all) url.searchParams.delete('type');
+        else url.searchParams.set('type', chip.dataset.filter!);
+        history.replaceState(null, '', url);
+      }
+      if (all) fitTiles(); // the grid could not be measured while it was hidden
+    };
+    // a click on a type animates the change (src/lib/motion.ts): entries of the filtered list
+    // that stay slide to their new place, the others fade out or in
+    const named = (): [HTMLElement, string][] => [
+      ...rows.map((r, i): [HTMLElement, string] => [r, transitionName('news-row', String(i))]),
+      ...months.map((m, i): [HTMLElement, string] => [m, transitionName('news-month', String(i))]),
+    ];
+    chips.forEach((c) =>
+      c.addEventListener('click', () => animateChange(() => show(c.dataset.filter!), named)),
+    );
+    show(new URLSearchParams(location.search).get('type') ?? 'all', false);
+  }
+</script>
+
+<style>
+  .page {
+    padding-block: 36px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .type-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tchip {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    border: 1px solid var(--teal-300);
+    cursor: pointer;
+  }
+  .tchip:hover {
+    border-color: var(--teal-500);
+  }
+  .tchip[aria-pressed='true'] {
+    background: var(--teal-700);
+    border-color: var(--teal-700);
+    color: var(--white);
+  }
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 20px;
+  }
+  /* the newest item is wider and tinted (NewsTile), not taller: two rows of 4 + 2 and 2 + 2 + 2 */
+  .bento > :global(*) {
+    grid-column: span 2;
+  }
+  .bento > :global(:nth-child(1)) {
+    grid-column: span 4;
+  }
+  /* an opened "Read more" grows only its own tile; the script holds the others at their closed
+     height (a plain align-items: start made every tile shrink to its content). While measuring,
+     the opened text is hidden for a moment. */
+  .bento > :global(.measuring details.more > :not(summary)) {
+    display: none;
+  }
+  .bento > :global(.measuring details.more[open] summary) {
+    margin-bottom: 0;
+  }
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .timeline h2 {
+    font-size: 34px;
+  }
+  .timeline :global(.year) {
+    font-size: 22px;
+  }
+  .older summary {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .older summary::-webkit-details-marker {
+    display: none;
+  }
+  .btn-like {
+    padding: 13px 24px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--teal-700);
+    font-weight: 600;
+    background: var(--white);
+  }
+  .older[open] summary {
+    display: none;
+  }
+  /* the earlier years slide open like "Read more"; at once when a link opens them (NewsMore),
+     in browsers without ::details-content and under reduced motion */
+  .older {
+    interpolate-size: allow-keywords;
+  }
+  .older::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition:
+      block-size 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+      content-visibility 0.45s allow-discrete;
+  }
+  .older[open]::details-content {
+    block-size: auto;
+  }
+  .older.instant::details-content {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .older::details-content {
+      transition: none;
+    }
+  }
+  @media (max-width: 900px) {
+    .bento {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .bento > :global(*) {
+      grid-column: auto !important;
+      grid-row: auto !important;
+    }
+  }
+</style>

@@ -1,0 +1,106 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import HeroTab from '../../components/HeroTab.astro';
+import Button from '../../components/Button.astro';
+import YearRail from '../../components/YearRail.astro';
+import PublicationItem from '../../components/PublicationItem.astro';
+import PublicationFilters from '../../components/PublicationFilters.astro';
+import FigureViewer from '../../components/FigureViewer.astro';
+import { getPublications, getTalks, groupBy } from '../../lib/data';
+
+// The full list, newest first. Search, member, year and theme filters work in the browser and keep
+// their state in the URL (?theme=…&member=…&year=…&q=…); without JavaScript the list is simply
+// complete. The BibTeX button downloads what is shown (all entries without a filter).
+const years = groupBy(await getPublications(), (p) => String(p.year));
+// "Talks & media" appears once there are talks (none before launch, Martin, November 2026)
+const hasTalks = (await getTalks()).length > 0;
+---
+
+<BaseLayout
+  title="Publications"
+  current="publications"
+  description="Published papers and preprints from the OWL-ML lab."
+>
+  <PageHero slot="band" title="Publications" lead="Published papers and preprints from the lab.">
+    <Fragment slot="actions">
+      <Button
+        href="/publications.bib"
+        variant="on-dark"
+        download="owl-ml-publications.bib"
+        data-bib-export
+      >
+        <span data-bib-label>Download all as BibTeX</span>
+      </Button>
+    </Fragment>
+    {hasTalks && (
+      <Fragment slot="tabs">
+        <HeroTab href="/publications/" current>
+          Papers
+        </HeroTab>
+        <HeroTab href="/publications/talks/">Talks &amp; media</HeroTab>
+      </Fragment>
+    )}
+  </PageHero>
+
+  <div class="container page">
+    <PublicationFilters />
+    <p class="status" id="pub-status" aria-live="polite"></p>
+    <p id="pub-empty" hidden>
+      <button type="button" class="reset" data-pub-reset>
+        Show all publications
+      </button>
+    </p>
+    <div class="years">
+      {years.map(([year, pubs]) => (
+        <YearRail label={year} data-year-group>
+          {pubs.map((p) => (
+            <PublicationItem pub={p} />
+          ))}
+        </YearRail>
+      ))}
+    </div>
+  </div>
+  <FigureViewer />
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 40px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  /* the BibTeX button while no publication is shown */
+  :global([data-bib-export][aria-disabled='true']) {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .status {
+    font-size: 15px;
+    color: var(--body);
+  }
+  /* empty while nothing is filtered: no gap */
+  .status:empty {
+    margin: 0;
+  }
+  .reset {
+    font-weight: 600;
+    color: var(--teal-600);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .years {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  @media (max-width: 720px) {
+    .page {
+      padding-block: 28px 48px;
+    }
+  }
+</style>

@@ -1,0 +1,58 @@
+name: Update my profile
+description: Change your own page on the People list (bio, role, photo, links, themes, courses).
+title: 'Profile: '
+labels: [content]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill in only what should change. Your file is `src/content/people/<your-id>.md` if you
+        prefer to edit it yourself.
+        A maintainer, or a lab member working with Claude Code on their computer, turns this
+        into a pull request.
+  - type: input
+    id: person
+    attributes:
+      label: Your id or name
+      description: The id is the end of your profile address, e.g. `storch` in /people/storch/.
+      placeholder: storch
+    validations:
+      required: true
+  - type: checkboxes
+    id: what
+    attributes:
+      label: What should change?
+      options:
+        - label: Bio (2 to 5 sentences, plain text)
+        - label: Role or group
+        - label: Photo
+        - label: Links (email, Scholar, ORCID, GitHub, LinkedIn, website)
+        - label: Research themes
+        - label: Courses I teach
+        - label: I have left the lab (move me to alumni)
+  - type: textarea
+    id: details
+    attributes:
+      label: The new content
+      description: |
+        Write it exactly as it should appear. For a photo, drag the file in here: square or close
+        to it, at least 800 × 800 px, a photo of yourself. It is cropped to a square.
+    validations:
+      required: true
+  - type: checkboxes
+    id: themes
+    attributes:
+      label: Research themes (only if they should change)
+      description: Theme names and ids come from `src/data/themes.yml`.
+      options:
+        - label: Generative & Dynamic Models (gd)
+        - label: Memory & Consolidation (mc)
+        - label: Continual Machine Learning (cl)
+        - label: Participatory AI (pai)
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Consent
+      options:
+        - label: This is my own profile and I agree that this information is published.
+          required: true

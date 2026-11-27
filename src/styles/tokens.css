@@ -1,0 +1,67 @@
+/* Design tokens. Values from docs/DESIGN.md; change them here only. */
+:root {
+  /* teal */
+  --teal-50: #f2f8f6; /* subtle panels */
+  --teal-100: #e7f1ee; /* page background */
+  --teal-200: #d3eae4; /* chips, tints, avatar placeholders */
+  --teal-300: #bfddd5; /* outlines, idle map edges */
+  --teal-500: #008878; /* Uni Bremen "Dunkelgrün": accents, theme node strokes */
+  --teal-600: #00756a; /* links (passes contrast on white) */
+  --teal-700: #1f4a47; /* header/hero band, footer, dark buttons */
+  --teal-750: #18403d; /* hero figure panel */
+  --teal-800: #123b39; /* text on teal tints */
+  --teal-line-dark: #2e5d59; /* borders on dark teal */
+  --field-1: #4e9a8f; /* hero figure (network-loop.ts): dots, edges, nodes */
+  --field-2: #8acbb7;
+  --field-3: #2f7a70;
+  --on-dark: #e9f3f0;
+  --on-dark-muted: #cfe3de;
+  --on-dark-subtle: #bfd9d3;
+  --outline-on-dark: #6e9993;
+
+  /* orange (logo) */
+  --orange: #e38a43; /* exact logo orange (sRGB) */
+  --peach-light: #f3b585; /* small orange-ish text on dark teal */
+  --peach-100: #fdeee1; /* boxes */
+  --peach-200: #fce7d4; /* "join us" bands */
+  --on-orange: #1a1208; /* text on orange buttons */
+  --on-peach: #3a2410;
+  --on-peach-muted: #5a3a1c;
+  --orange-ink: #9a4a0c;
+
+  /* neutrals */
+  --ink: #14201f;
+  --body: #3b4a48;
+  --muted: #566664;
+  --year: #6e8783;
+  --hairline: #e3eae7;
+  --white: #ffffff;
+
+  /* type */
+  /* families with metric-matched fallbacks, from src/lib/fonts.ts (loaded in BaseLayout) */
+  --font-display: var(--font-bricolage);
+  --font-body: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --text-body: 17px;
+  --line-body: 1.55;
+
+  /* shape */
+  --radius-card: 22px;
+  --radius-card-sm: 16px;
+  --radius-label: 6px;
+  --radius-pill: 999px;
+  --container: 1200px;
+  --gutter: 32px;
+  --gutter-phone: 20px;
+
+  /* focus ring: dark teal on light surfaces (orange on white is below 3:1);
+     dark bands override it with --peach-light */
+  --focus: 3px solid var(--teal-700);
+}
+
+@media (max-width: 720px) {
+  :root {
+    --gutter: var(--gutter-phone);
+    --text-body: 16px;
+  }
+}

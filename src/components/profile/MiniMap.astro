@@ -1,0 +1,145 @@
+---
+import { initials } from '../../lib/names';
+import { wrap } from '../../lib/map';
+
+// Small static map on profiles: the person, their themes, and lab co-authors (alphabetical).
+// The drawing is one labelled image; co-authors are linked in the caption below it.
+// Hidden on phones (docs/DESIGN.md).
+interface Props {
+  personId: string;
+  name: string;
+  themes: { id: string; short: string }[];
+  coauthors: { id: string; name: string }[];
+  /** the lab head: "all lab members" instead of a list */
+  withEveryone?: boolean;
+}
+const { personId, name, themes, coauthors, withEveryone = false } = Astro.props;
+const H = Math.max(260, themes.length * 70 + 40, coauthors.length * 60 + 40);
+const me = { x: 120, y: H / 2 };
+const themeY = (i: number) => H / 2 + (i - (themes.length - 1) / 2) * 70;
+// theme names wrap onto two lines so they stay inside the drawing
+const themeLines = themes.map((t) => wrap(t.short, 13));
+const coY = (i: number) => H / 2 + (i - (coauthors.length - 1) / 2) * 60;
+const label = `${name}, connected to ${themes.map((t) => t.short).join(', ')}${
+  withEveryone
+    ? '; co-authors in the lab: all lab members'
+    : coauthors.length
+      ? `; co-authors in the lab: ${coauthors.map((c) => c.name).join(', ')}`
+      : ''
+}.`;
+---
+
+<figure class="mini">
+  <svg viewBox={`0 0 330 ${H}`} role="img" aria-label={label}>
+    {coauthors.map((_, i) => (
+      <line x1="30" y1={coY(i)} x2={me.x} y2={me.y} class="e e-co" />
+    ))}
+    {themes.map((_, i) => (
+      <line x1={me.x} y1={me.y} x2="200" y2={themeY(i)} class="e" />
+    ))}
+    {coauthors.map((c, i) => (
+      <>
+        <circle cx="30" cy={coY(i)} r="15" class="co" />
+        <text x="30" y={coY(i) + 5} class="co-t">
+          {initials(c.name)}
+        </text>
+      </>
+    ))}
+    <circle cx={me.x} cy={me.y} r="20" class="me" />
+    <text x={me.x} y={me.y + 6} class="me-t">
+      {initials(name)}
+    </text>
+    {themes.map((_, i) => (
+      <>
+        <circle cx="200" cy={themeY(i)} r="12" class="th" />
+        <text x="220" y={themeY(i) + 5 - (themeLines[i]!.length - 1) * 8} class="th-t">
+          {themeLines[i]!.map((l, j) => (
+            <tspan x="220" dy={j ? 16 : 0}>
+              {l}
+            </tspan>
+          ))}
+        </text>
+      </>
+    ))}
+  </svg>
+  {withEveryone && (
+    <figcaption class="co-list">
+      Co-authors in the lab: <a href="/people/">all lab members</a>
+    </figcaption>
+  )}
+  {coauthors.length > 0 && (
+    <figcaption class="co-list">
+      Co-authors in the lab:{' '}
+      {coauthors.map((c, i) => (
+        <>
+          {i > 0 && ', '}
+          <a href={`/people/${c.id}/`}>{c.name}</a>
+        </>
+      ))}
+    </figcaption>
+  )}
+  <a class="more-link" href={`/?person=${personId}#research`}>
+    Open in the full map →
+  </a>
+</figure>
+
+<style>
+  .mini {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+  }
+  .e {
+    stroke: var(--teal-600);
+    stroke-width: 1.5;
+  }
+  .e-co {
+    stroke: var(--teal-300);
+  }
+  .co {
+    fill: var(--white);
+    stroke: var(--body);
+    stroke-width: 1.2;
+  }
+  .co-list {
+    font-size: 14px;
+    color: var(--body);
+  }
+  .co-t {
+    font-size: 12px;
+    text-anchor: middle;
+    fill: var(--body);
+    font-family: var(--font-body);
+  }
+  .me {
+    fill: var(--teal-700);
+  }
+  .me-t {
+    font-size: 13px;
+    font-weight: 600;
+    text-anchor: middle;
+    fill: var(--white);
+    font-family: var(--font-body);
+  }
+  .th {
+    fill: var(--teal-200);
+    stroke: var(--teal-500);
+    stroke-width: 2;
+  }
+  .th-t {
+    font-size: 13px;
+    font-weight: 600;
+    fill: var(--ink);
+    font-family: var(--font-body);
+  }
+  @media (max-width: 960px) {
+    .mini {
+      display: none;
+    }
+  }
+</style>

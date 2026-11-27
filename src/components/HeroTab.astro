@@ -1,0 +1,35 @@
+---
+// Folder tab on the lower edge of a PageHero (Papers / Talks & media).
+interface Props {
+  href: string;
+  current?: boolean;
+}
+const { href, current = false } = Astro.props;
+---
+
+<a
+  class:list={['tab', current && 'current']}
+  href={href}
+  aria-current={current ? 'page' : undefined}
+>
+  <slot />
+</a>
+
+<style>
+  .tab {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 12px 12px 0 0;
+    font-weight: 600;
+    color: var(--on-dark-muted);
+    text-decoration: none;
+  }
+  .tab:hover {
+    color: var(--white);
+  }
+  .current,
+  .current:hover {
+    background: var(--teal-100);
+    color: var(--ink);
+  }
+</style>

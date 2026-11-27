@@ -1,0 +1,62 @@
+---
+import { formatMonth } from '../lib/format';
+import type { CollectionEntry } from 'astro:content';
+import { personNames } from '../lib/data';
+
+// Compact talk row (profiles). The Talks & media page uses richer cards.
+interface Props {
+  talk: CollectionEntry<'talks'>;
+}
+const { talk } = Astro.props;
+const d = talk.data;
+const names = await personNames();
+---
+
+<article class="talk">
+  <p class="meta">
+    {formatMonth(d.date)} · {d.event}
+    {d.location ? `, ${d.location}` : ''}
+  </p>
+  <h3>{d.title}</h3>
+  <p class="speakers">
+    {d.speakers.map((s, i) => (
+      <>
+        <a href={`/people/${s}/`}>{names.get(s)}</a>
+        {i < d.speakers.length - 1 && ', '}
+      </>
+    ))}
+  </p>
+  <div class="links">
+    {d.slides && <a href={d.slides}>Slides</a>}
+    {d.video && (
+      <a href={`https://www.youtube.com/watch?v=${d.video.youtube}`}>Watch on YouTube ↗</a>
+    )}
+  </div>
+</article>
+
+<style>
+  .talk {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  h3 {
+    font-family: var(--font-body);
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .speakers a {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .links {
+    display: flex;
+    gap: 18px;
+    font-weight: 600;
+    font-size: 15px;
+  }
+</style>

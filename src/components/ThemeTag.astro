@@ -1,0 +1,39 @@
+---
+import { getTheme } from '../lib/themes';
+
+// Names always come from src/data/themes.yml; never hard-code them.
+interface Props {
+  id: string;
+  /** full name (default) or the short tag */
+  label?: 'name' | 'short';
+  href?: string;
+}
+const { id, label = 'name', href } = Astro.props;
+const theme = await getTheme(id);
+const text = label === 'short' ? theme.short : theme.name;
+---
+
+{href ? (
+  <a class="theme-tag" href={href}>
+    {text}
+  </a>
+) : (
+  <span class="theme-tag">{text}</span>
+)}
+
+<style>
+  .theme-tag {
+    display: inline-block;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--teal-800);
+    background: var(--teal-200);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+  }
+  a.theme-tag:hover {
+    background: var(--teal-300);
+    color: var(--teal-800);
+  }
+</style>

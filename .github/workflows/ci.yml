@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request cancels the run still going for the older one. Runs on
+# main are never cancelled.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  ASTRO_TELEMETRY_DISABLED: '1'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+# Runners are pinned to ubuntu-24.04: ubuntu-latest moved to 26.04 in November 2026, where
+# Playwright 1.56 cannot install Chromium. Move on once Playwright supports the newer image.
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Check (types, content schemas, lint, format)
+        run: npm run check
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      # Checks against the built site: internal links, accessibility, interactions
+      - name: Internal links and anchors
+        run: npm run links
+      - name: Install Chromium for the browser checks
+        run: npx playwright install --with-deps chromium
+      - name: Accessibility (axe, every page at 1440 and 390 px)
+        run: npm run a11y
+      - name: Interactions (keyboard, no-JavaScript fallbacks, no third-party requests)
+        run: npm run interactions
+      - name: Lighthouse budget (homepage, phone and desktop, every category >= 95)
+        run: npm run lighthouse
+      # CI keeps no files: to look at a pull request, run it locally (README.md, "Running the site on
+      # your computer"). Files kept from runs count against the organisation's Actions storage.
+
+      # Pull requests that change a demo: check that the offline export still builds (docs/DEMOS.md)
+      - name: Did this pull request change a demo?
+        id: demos
+        if: github.event_name == 'pull_request'
+        run: |
+          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -qE '^(src/demos/|public/demos/|scripts/demos-offline)'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build offline demos
+        if: steps.demos.outputs.changed == 'true'
+        run: npm run demos:offline

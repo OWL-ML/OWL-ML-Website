@@ -1,0 +1,77 @@
+---
+import { getNews } from '../../lib/data';
+import { newsTarget } from '../../lib/news';
+import { formatDate } from '../../lib/format';
+
+const items = (await getNews()).slice(0, 6);
+---
+
+<div class="col">
+  <div class="section-head">
+    <h2 id="news-h">News</h2>
+    <a class="more-link" href="/news/">
+      All news →
+    </a>
+  </div>
+  <ul class="list">
+    {items.map((n, i) => {
+      const target = newsTarget(n);
+      const Tag = target ? 'a' : 'div';
+      return (
+        <li class:list={[i >= 3 && 'desktop-only']}>
+          <Tag class="item" href={target?.href}>
+            <span class="date">{formatDate(n.data.date)}</span>
+            <span class="title">{n.data.title}</span>
+          </Tag>
+        </li>
+      );
+    })}
+  </ul>
+</div>
+
+<style>
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+  }
+  .list {
+    margin: 0;
+    padding: 8px 26px;
+    list-style: none;
+    background: var(--white);
+    border-radius: var(--radius-card);
+  }
+  li + li {
+    border-top: 1px solid var(--hairline);
+  }
+  .item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 15px 0;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  a.item:hover .title {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
+  .date {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .title {
+    font-weight: 500;
+  }
+  @media (max-width: 720px) {
+    .desktop-only {
+      display: none;
+    }
+    .list {
+      padding: 4px 20px;
+    }
+  }
+</style>

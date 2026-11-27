@@ -1,0 +1,61 @@
+name: Add a paper
+description: Add a publication with lab authors to the Publications page and the research map.
+title: 'Paper: '
+labels: [content]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The entry goes into `src/data/publications.bib`. Whoever adds it completes the details
+        (authors, venue, year) from the link you give, and lists anything they could not confirm
+        instead of guessing.
+        A maintainer, or a lab member working with Claude Code on their computer, turns this
+        into a pull request.
+  - type: input
+    id: link
+    attributes:
+      label: Link to the paper
+      description: arXiv, DOI, OpenReview or the publisher's page.
+      placeholder: https://arxiv.org/abs/2610.01234
+    validations:
+      required: true
+  - type: input
+    id: title
+    attributes:
+      label: Title
+  - type: input
+    id: venue
+    attributes:
+      label: Venue and year
+      description: Leave empty for a preprint.
+      placeholder: ICML 2026
+  - type: input
+    id: members
+    attributes:
+      label: Lab authors (ids)
+      description: The ids of everyone from the lab on the author list, as in /people/<id>/.
+      placeholder: storch, mundt
+    validations:
+      required: true
+  - type: checkboxes
+    id: themes
+    attributes:
+      label: Research themes
+      description: |
+        Theme names and ids come from `src/data/themes.yml`. If you are unsure, tick none: the
+        tags are then proposed and marked for Martin to decide.
+      options:
+        - label: Generative & Dynamic Models (gd)
+        - label: Memory & Consolidation (mc)
+        - label: Continual Machine Learning (cl)
+        - label: Participatory AI (pai)
+  - type: textarea
+    id: links
+    attributes:
+      label: Further links (optional)
+      description: Code, project page, dataset, slides, video, one per line.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else (optional)
+      description: An award, equal contribution, a teaser figure (drag it in), or "also add a news item".

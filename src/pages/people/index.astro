@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import TeamCard from '../../components/TeamCard.astro';
+import JoinBand from '../../components/JoinBand.astro';
+import { getPeople, groupBy } from '../../lib/data';
+import { titledName } from '../../lib/format';
+
+// Not mocked: designed in the same system as the homepage team grid.
+const groupLabels: Record<string, string> = {
+  lead: 'Lab lead',
+  postdoc: 'Postdocs',
+  phd: 'PhD candidates',
+  staff: 'Staff',
+  'student-assistant': 'Student assistants',
+  visiting: 'Visiting researchers',
+};
+const current = groupBy(await getPeople('current'), (p) => p.data.group);
+const alumni = await getPeople('alumni');
+---
+
+<BaseLayout title="People" current="people" description="Members of the OWL-ML lab.">
+  <PageHero
+    slot="band"
+    title="People"
+    lead={'We study how machines keep learning.\nHere are the humans who do the same.'}
+  />
+  <div class="container page">
+    {current.map(([group, people]) => (
+      <section class="group" aria-labelledby={`g-${group}`}>
+        <h2 id={`g-${group}`}>{groupLabels[group]}</h2>
+        <ul class="grid">
+          {people.map((p) => (
+            <li>
+              <TeamCard person={p} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+    {alumni.length > 0 && (
+      <details class="alumni">
+        <summary>
+          <h2>Alumni</h2>
+        </summary>
+        <ul class="alumni-list">
+          {alumni.map((p) => (
+            <li>
+              <a href={`/people/${p.id}/`}>{titledName(p.data)}</a>
+              <span class="meta">
+                {p.data.role}
+                {p.data.until && ` · until ${p.data.until.slice(0, 4)}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </details>
+    )}
+    <JoinBand
+      title="Looking for a thesis?"
+      text="We shape each Bachelor's or Master's thesis together with you. See our themes, past theses and how to reach out."
+      cta="Get in touch about a thesis"
+      href="/theses/"
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 48px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  h2 {
+    font-size: 30px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .alumni {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 24px 28px;
+  }
+  .alumni summary {
+    cursor: pointer;
+  }
+  .alumni summary h2 {
+    display: inline;
+  }
+  .alumni-list {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+  }
+  .alumni-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+  }
+  @media (max-width: 720px) {
+    .page {
+      padding-block: 32px 48px;
+      gap: 36px;
+    }
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+  }
+</style>

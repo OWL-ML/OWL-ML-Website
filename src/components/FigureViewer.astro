@@ -1,0 +1,117 @@
+---
+// Shows a paper's teaser figure large, in place, when its thumbnail ([data-figure] link from
+// PublicationItem) is clicked. Without JavaScript the link opens the image itself.
+---
+
+<dialog class="viewer" aria-labelledby="viewer-caption" data-figure-viewer>
+  <form method="dialog" class="bar">
+    <p id="viewer-caption" class="caption" data-viewer-caption></p>
+    <button class="close" aria-label="Close figure">
+      ×
+    </button>
+  </form>
+  <img data-viewer-img alt="" />
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-figure-viewer]');
+  if (dialog) {
+    const img = dialog.querySelector<HTMLImageElement>('[data-viewer-img]')!;
+    const caption = dialog.querySelector<HTMLElement>('[data-viewer-caption]')!;
+    // The thumbnail grows into the large figure and shrinks back on closing (Martin, November
+    // 2026): a view transition between the thumbnail and the large image, which share the name
+    // "paper-figure" one at a time. Without browser support or under reduced motion, the
+    // figure simply appears and disappears.
+    const animate = (update: () => void | Promise<void>) => {
+      const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (motion && document.startViewTransition) document.startViewTransition(update);
+      else void update();
+    };
+    let thumb: HTMLElement | null = null;
+    const name = (el: HTMLElement | null, on: boolean) =>
+      el && (el.style.viewTransitionName = on ? 'paper-figure' : '');
+
+    document.addEventListener('click', (e) => {
+      const link = (e.target as Element).closest<HTMLAnchorElement>('a[data-figure]');
+      if (!link || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      thumb = link.querySelector<HTMLElement>('.figure-img');
+      name(thumb, true);
+      animate(async () => {
+        name(thumb, false);
+        img.src = link.href;
+        img.width = Number(link.dataset.figureWidth);
+        img.height = Number(link.dataset.figureHeight);
+        img.alt = `Figure of “${link.dataset.figureCaption}”`;
+        caption.textContent = link.dataset.figureCaption ?? '';
+        name(img, true);
+        dialog.showModal();
+        // wait (briefly) for the large image, so it does not grow in as an empty box
+        await Promise.race([img.decode().catch(() => {}), new Promise((r) => setTimeout(r, 400))]);
+      });
+    });
+
+    const close = () =>
+      animate(() => {
+        name(img, false);
+        name(thumb, true);
+        dialog.close();
+      });
+    // the close button, Escape and a click on the backdrop all close it the same way
+    dialog.querySelector('form')!.addEventListener('submit', (e) => {
+      e.preventDefault();
+      close();
+    });
+    dialog.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      close();
+    });
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) close();
+    });
+    // once the figure is back in its place, the thumbnail gives up the name again
+    dialog.addEventListener('close', () => requestAnimationFrame(() => name(thumb, false)));
+  }
+</script>
+
+<style>
+  .viewer {
+    width: min(1200px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    padding: 16px 20px 20px;
+    border: 0;
+    border-radius: var(--radius-card-sm);
+    background: var(--white);
+    color: var(--ink);
+  }
+  .viewer::backdrop {
+    background: rgb(18 59 57 / 0.75);
+  }
+  .bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 12px;
+  }
+  .caption {
+    font-weight: 600;
+  }
+  .close {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--teal-300);
+    background: var(--white);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  img {
+    width: 100%;
+    height: auto;
+    max-height: calc(100vh - 140px);
+    object-fit: contain;
+  }
+</style>

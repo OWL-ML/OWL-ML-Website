@@ -1,0 +1,25 @@
+name: Report a problem
+description: Something on the website is wrong, broken or hard to use.
+title: 'Problem: '
+labels: [bug]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: The address of the page.
+      placeholder: https://owl-ml.com/people/
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: What you expected and what happened instead. Screenshots can be dragged in.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser (optional)
+      placeholder: iPhone, Safari / Windows, Firefox, keyboard only, screen reader ...

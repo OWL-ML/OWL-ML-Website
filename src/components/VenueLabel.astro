@@ -1,0 +1,22 @@
+---
+interface Props {
+  class?: string;
+}
+---
+
+<span class:list={['venue', Astro.props.class]}>
+  <slot />
+</span>
+
+<style>
+  .venue {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.4;
+    background: var(--teal-700);
+    color: var(--white);
+    padding: 4px 10px;
+    border-radius: var(--radius-label);
+  }
+</style>

@@ -1,0 +1,607 @@
+{
+  "python": "3.13.16",
+  "snippets": [
+    {
+      "id": "alias",
+      "answer": 1,
+      "title": "Two names, one list",
+      "code": "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)\n",
+      "options": ["[1, 2, 3]", "[1, 2, 3, 4]", "An error"],
+      "lesson": "Assignment never copies. b = a gives the same list a second name, so changing it through b changes what a sees. Use b = a.copy() for an independent list.",
+      "steps": [
+        { "line": 1, "frames": [{ "name": "Global", "vars": [] }], "heap": [], "out": "" },
+        {
+          "line": 2,
+          "frames": [{ "name": "Global", "vars": [{ "name": "a", "v": { "ref": "①" } }] }],
+          "heap": [{ "label": "①", "type": "list", "text": "[1, 2, 3]" }],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "a", "v": { "ref": "①" } },
+                { "name": "b", "v": { "ref": "①" } }
+              ]
+            }
+          ],
+          "heap": [{ "label": "①", "type": "list", "text": "[1, 2, 3]" }],
+          "out": ""
+        },
+        {
+          "line": 4,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "a", "v": { "ref": "①" } },
+                { "name": "b", "v": { "ref": "①" } }
+              ]
+            }
+          ],
+          "heap": [{ "label": "①", "type": "list", "text": "[1, 2, 3, 4]" }],
+          "out": ""
+        },
+        {
+          "line": null,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "a", "v": { "ref": "①" } },
+                { "name": "b", "v": { "ref": "①" } }
+              ]
+            }
+          ],
+          "heap": [{ "label": "①", "type": "list", "text": "[1, 2, 3, 4]" }],
+          "out": "[1, 2, 3, 4]\n"
+        }
+      ],
+      "output": "[1, 2, 3, 4]\n"
+    },
+    {
+      "id": "plus",
+      "answer": 2,
+      "title": "+= on a string and on a list",
+      "code": "s = \"owl\"\nt = s\nt += \"s\"\nprint(s)\n\nx = [1]\ny = x\ny += [2]\nprint(x)\n",
+      "options": ["owls, then [1, 2]", "owl, then [1]", "owl, then [1, 2]", "owls, then [1]"],
+      "lesson": "Strings cannot be changed, so t += \"s\" builds a new string and moves the name t to it. The name s still points to \"owl\". Lists can be changed, so y += [2] extends the existing list in place, which x shares.",
+      "steps": [
+        { "line": 1, "frames": [{ "name": "Global", "vars": [] }], "heap": [], "out": "" },
+        {
+          "line": 2,
+          "frames": [{ "name": "Global", "vars": [{ "name": "s", "v": { "ref": "①" } }] }],
+          "heap": [{ "label": "①", "type": "str", "text": "'owl'" }],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "s", "v": { "ref": "①" } },
+                { "name": "t", "v": { "ref": "①" } }
+              ]
+            }
+          ],
+          "heap": [{ "label": "①", "type": "str", "text": "'owl'" }],
+          "out": ""
+        },
+        {
+          "line": 4,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "s", "v": { "ref": "①" } },
+                { "name": "t", "v": { "ref": "②" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "str", "text": "'owl'" },
+            { "label": "②", "type": "str", "text": "'owls'" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 6,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "s", "v": { "ref": "①" } },
+                { "name": "t", "v": { "ref": "②" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "str", "text": "'owl'" },
+            { "label": "②", "type": "str", "text": "'owls'" }
+          ],
+          "out": "owl\n"
+        },
+        {
+          "line": 7,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "s", "v": { "ref": "①" } },
+                { "name": "t", "v": { "ref": "②" } },
+                { "name": "x", "v": { "ref": "③" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "str", "text": "'owl'" },
+            { "label": "②", "type": "str", "text": "'owls'" },
+            { "label": "③", "type": "list", "text": "[1]" }
+          ],
+          "out": "owl\n"
+        },
+        {
+          "line": 8,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "s", "v": { "ref": "①" } },
+                { "name": "t", "v": { "ref": "②" } },
+                { "name": "x", "v": { "ref": "③" } },
+                { "name": "y", "v": { "ref": "③" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "str", "text": "'owl'" },
+            { "label": "②", "type": "str", "text": "'owls'" },
+            { "label": "③", "type": "list", "text": "[1]" }
+          ],
+          "out": "owl\n"
+        },
+        {
+          "line": 9,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "s", "v": { "ref": "①" } },
+                { "name": "t", "v": { "ref": "②" } },
+                { "name": "x", "v": { "ref": "③" } },
+                { "name": "y", "v": { "ref": "③" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "str", "text": "'owl'" },
+            { "label": "②", "type": "str", "text": "'owls'" },
+            { "label": "③", "type": "list", "text": "[1, 2]" }
+          ],
+          "out": "owl\n"
+        },
+        {
+          "line": null,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "s", "v": { "ref": "①" } },
+                { "name": "t", "v": { "ref": "②" } },
+                { "name": "x", "v": { "ref": "③" } },
+                { "name": "y", "v": { "ref": "③" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "str", "text": "'owl'" },
+            { "label": "②", "type": "str", "text": "'owls'" },
+            { "label": "③", "type": "list", "text": "[1, 2]" }
+          ],
+          "out": "owl\n[1, 2]\n"
+        }
+      ],
+      "output": "owl\n[1, 2]\n"
+    },
+    {
+      "id": "default",
+      "answer": 1,
+      "title": "A default that remembers",
+      "code": "def add(item, bag=[]):\n    bag.append(item)\n    return bag\n\nprint(add(\"a\"))\nprint(add(\"b\"))\n",
+      "options": ["['a'], then ['b']", "['a'], then ['a', 'b']", "An error"],
+      "lesson": "The default list is created once, when def runs, and stored with the function. Every call without a bag reuses that same list. Write bag=None and create a new list inside the function instead.",
+      "steps": [
+        { "line": 1, "frames": [{ "name": "Global", "vars": [] }], "heap": [], "out": "" },
+        {
+          "line": 5,
+          "frames": [{ "name": "Global", "vars": [{ "name": "add", "v": { "ref": "①" } }] }],
+          "heap": [
+            { "label": "①", "type": "function", "text": "def add(item, bag=②)" },
+            { "label": "②", "type": "list", "text": "[]" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 2,
+          "frames": [
+            { "name": "Global", "vars": [{ "name": "add", "v": { "ref": "①" } }] },
+            {
+              "name": "add()",
+              "vars": [
+                { "name": "item", "v": { "ref": "③" } },
+                { "name": "bag", "v": { "ref": "②" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "function", "text": "def add(item, bag=②)" },
+            { "label": "②", "type": "list", "text": "[]" },
+            { "label": "③", "type": "str", "text": "'a'" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            { "name": "Global", "vars": [{ "name": "add", "v": { "ref": "①" } }] },
+            {
+              "name": "add()",
+              "vars": [
+                { "name": "item", "v": { "ref": "③" } },
+                { "name": "bag", "v": { "ref": "②" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "function", "text": "def add(item, bag=②)" },
+            { "label": "②", "type": "list", "text": "['a']" },
+            { "label": "③", "type": "str", "text": "'a'" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 6,
+          "frames": [{ "name": "Global", "vars": [{ "name": "add", "v": { "ref": "①" } }] }],
+          "heap": [
+            { "label": "①", "type": "function", "text": "def add(item, bag=②)" },
+            { "label": "②", "type": "list", "text": "['a']" }
+          ],
+          "out": "['a']\n"
+        },
+        {
+          "line": 2,
+          "frames": [
+            { "name": "Global", "vars": [{ "name": "add", "v": { "ref": "①" } }] },
+            {
+              "name": "add()",
+              "vars": [
+                { "name": "item", "v": { "ref": "④" } },
+                { "name": "bag", "v": { "ref": "②" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "function", "text": "def add(item, bag=②)" },
+            { "label": "②", "type": "list", "text": "['a']" },
+            { "label": "④", "type": "str", "text": "'b'" }
+          ],
+          "out": "['a']\n"
+        },
+        {
+          "line": 3,
+          "frames": [
+            { "name": "Global", "vars": [{ "name": "add", "v": { "ref": "①" } }] },
+            {
+              "name": "add()",
+              "vars": [
+                { "name": "item", "v": { "ref": "④" } },
+                { "name": "bag", "v": { "ref": "②" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "function", "text": "def add(item, bag=②)" },
+            { "label": "②", "type": "list", "text": "['a', 'b']" },
+            { "label": "④", "type": "str", "text": "'b'" }
+          ],
+          "out": "['a']\n"
+        },
+        {
+          "line": null,
+          "frames": [{ "name": "Global", "vars": [{ "name": "add", "v": { "ref": "①" } }] }],
+          "heap": [
+            { "label": "①", "type": "function", "text": "def add(item, bag=②)" },
+            { "label": "②", "type": "list", "text": "['a', 'b']" }
+          ],
+          "out": "['a']\n['a', 'b']\n"
+        }
+      ],
+      "output": "['a']\n['a', 'b']\n"
+    },
+    {
+      "id": "late",
+      "answer": 1,
+      "title": "Functions made in a loop",
+      "code": "fns = []\nfor i in range(3):\n    fns.append(lambda: i)\n\nprint([f() for f in fns])\n",
+      "options": ["[0, 1, 2]", "[2, 2, 2]", "[3, 3, 3]"],
+      "lesson": "A lambda looks up i at the moment it is called. By then the loop has finished and i is 2 for all three. Write lambda i=i: i to capture the current value.",
+      "steps": [
+        { "line": 1, "frames": [{ "name": "Global", "vars": [] }], "heap": [], "out": "" },
+        {
+          "line": 2,
+          "frames": [{ "name": "Global", "vars": [{ "name": "fns", "v": { "ref": "①" } }] }],
+          "heap": [{ "label": "①", "type": "list", "text": "[]" }],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "0" } }
+              ]
+            }
+          ],
+          "heap": [{ "label": "①", "type": "list", "text": "[]" }],
+          "out": ""
+        },
+        {
+          "line": 2,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "0" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②]" },
+            { "label": "②", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "1" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②]" },
+            { "label": "②", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 2,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "1" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 2,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 5,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } },
+                { "name": "f", "v": { "ref": "②" } }
+              ]
+            },
+            { "name": "lambda", "vars": [] }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 5,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } },
+                { "name": "f", "v": { "ref": "②" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } },
+                { "name": "f", "v": { "ref": "③" } }
+              ]
+            },
+            { "name": "lambda", "vars": [] }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 5,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } },
+                { "name": "f", "v": { "ref": "③" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 3,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } },
+                { "name": "f", "v": { "ref": "④" } }
+              ]
+            },
+            { "name": "lambda", "vars": [] }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": 5,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } },
+                { "name": "f", "v": { "ref": "④" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": ""
+        },
+        {
+          "line": null,
+          "frames": [
+            {
+              "name": "Global",
+              "vars": [
+                { "name": "fns", "v": { "ref": "①" } },
+                { "name": "i", "v": { "prim": "2" } }
+              ]
+            }
+          ],
+          "heap": [
+            { "label": "①", "type": "list", "text": "[②, ③, ④]" },
+            { "label": "②", "type": "function", "text": "lambda()" },
+            { "label": "③", "type": "function", "text": "lambda()" },
+            { "label": "④", "type": "function", "text": "lambda()" }
+          ],
+          "out": "[2, 2, 2]\n"
+        }
+      ],
+      "output": "[2, 2, 2]\n"
+    }
+  ]
+}

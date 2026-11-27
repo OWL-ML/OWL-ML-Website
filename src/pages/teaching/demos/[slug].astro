@@ -1,0 +1,104 @@
+---
+import QRCode from 'qrcode';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PageHero from '../../../components/PageHero.astro';
+import DemoFrame from '../../../components/demos/DemoFrame.astro';
+import { demos } from '../../../demos/registry';
+import { getCourses } from '../../../lib/data';
+
+// One demo on a plain page. These addresses are printed in lecture slides and QR codes: never
+// rename a slug without a redirect (docs/DEMOS.md). The QR code is made at build time.
+export async function getStaticPaths() {
+  const courses = await getCourses();
+  return demos.map((demo) => ({
+    params: { slug: demo.slug },
+    props: { demo, course: courses.find((c) => c.id === demo.course)! },
+  }));
+}
+const { demo, course } = Astro.props;
+const address = new URL(`/teaching/demos/${demo.slug}/`, Astro.site).href;
+const qr = await QRCode.toString(address, {
+  type: 'svg',
+  margin: 2,
+  color: { dark: '#14201f', light: '#ffffff' },
+});
+---
+
+<BaseLayout
+  title={demo.title}
+  current="teaching"
+  description={demo.learningPoint}
+  ogImage={`/og/teaching/demos/${demo.slug}.png`}
+>
+  <PageHero
+    slot="band"
+    title={demo.title}
+    crumbs={[
+      { label: 'Teaching', href: '/teaching/' },
+      { label: 'Demos', href: '/teaching/demos/' },
+      { label: demo.title },
+    ]}
+  />
+  <div class="container page">
+    <DemoFrame slug={demo.slug} courseName={course.name} headingLevel={null} />
+    <div class="below">
+      <a class="more-link" href={`/teaching/#course-${course.id}`}>
+        Part of the course {course.name} →
+      </a>
+      <details class="qr">
+        <summary>Show QR code</summary>
+        <figure>
+          <Fragment set:html={qr.replace('<svg ', '<svg role="img" aria-label="QR code" ')} />
+          <figcaption class="mono">{address}</figcaption>
+        </figure>
+      </details>
+      <a class="more-link" href="/teaching/demos/">
+        All demos →
+      </a>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 40px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .below {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+    align-items: flex-start;
+  }
+  .qr summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--teal-600);
+  }
+  .qr figure {
+    margin: 12px 0 0;
+    background: var(--white);
+    border-radius: var(--radius-card-sm);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .qr :global(svg) {
+    width: 240px;
+    height: 240px;
+  }
+  .qr figcaption {
+    font-size: 13px;
+    color: var(--body);
+    word-break: break-all;
+  }
+  @media (max-width: 720px) {
+    .page {
+      padding-block: 24px 48px;
+    }
+  }
+</style>

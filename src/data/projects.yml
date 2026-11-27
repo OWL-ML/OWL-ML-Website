@@ -1,0 +1,20 @@
+# Larger research projects the lab is part of, shown on the homepage under "Projects" in this
+# order. Summaries describe the research focus only (who takes part is on the project's own
+# website); no member lists. Logos go in src/assets/projects/, exactly as supplied by the project.
+- id: kd2school
+  name: KD²School
+  kind: DFG Research Training Group
+  start: 2026
+  end: 2030
+  summary: Interdisciplinary research on designing biosignal-adaptive systems for decision-making, in economic contexts as well as in private and professional life.
+  url: https://www.kd2school.kit.edu/
+  logo: kd2school.png
+
+- id: rai
+  name: Reasonable AI (RAI)
+  kind: Cluster of Excellence
+  start: 2026
+  end: 2032
+  summary: "A new generation of AI systems that learn in reasonable ways: that reason and use common sense, use resources efficiently, adapt to change, and lead to better socio-ethical outcomes."
+  url: https://www.hessian.ai/projects/reasonable-ai-rai/
+  logo: rai.png

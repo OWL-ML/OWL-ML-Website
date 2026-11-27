@@ -1,0 +1,58 @@
+name: Open World Lifelong Machine Learning Lab
+short: OWL-ML
+university: Universität Bremen
+faculty: Faculty 3 – Mathematics and Computer Science
+faculty_url: https://www.uni-bremen.de/en/fb3
+address: "Cartesium, Enrique-Schmidt-Str. 5, 28359 Bremen"
+contact_email: owlml@uni-bremen.de
+# News dated before this day (the lab's move to Bremen) is listed only on /news/archive/.
+news_archive_before: "2024-11-18"
+# the lab's GitHub organisation (footer link)
+github_url: https://github.com/OWL-ML
+# the lab's Zenodo community for lecture slides; the Teaching page shows "Lecture slides" once set
+# zenodo_url: https://zenodo.org/communities/...
+
+# Hero
+eyebrow: Open World Lifelong Machine Learning Lab
+headline_prefix: Machine learning that keeps
+tagline_words: [learning., adapting., growing., remembering.]
+mission: >-
+  Our central mission is to develop adaptive AI systems that continue learning throughout
+  their lifecycles. We see this as pivotal to making technology sustainable, inclusive and
+  accessible.
+# what the hero figure shows, for screen readers (the figure itself is decorative)
+hero_figure: >-
+  Animation: observations from an open world flow into a neural network. When a novel one
+  arrives, the network grows a new node and later sheds another; its predictions widen while
+  it is uncertain and narrow again.
+
+# "Lifelong ML needs many perspectives" (formerly "How our work connects"; wording by Martin, November 2026)
+story: >-
+  In order to equip machine learners with the ability for lifelong learning, several
+  perspectives are required. In our lab, our work spans the models themselves, what they
+  remember, how they learn over time, and the people who shape them and are affected by
+  them.
+# follows `story` on the homepage, where the research map is (not on the theses page)
+story_map: The map below shows how our projects link these.
+
+# "Why open world lifelong machine learning?" — wording from the current site (Martin may shorten;
+# the mockups used condensed versions)
+pillars:
+  - label: Open World
+    heading: The world is wide open and ever-changing!
+    text: >-
+      Our world is infinitely rich and beautifully diverse. It surprises us with constant
+      novelty and continues to confront us with the yet unknown. Let us take machine learning
+      into this world and embrace it.
+  - label: Lifelong
+    heading: Humans never stop learning and adapting!
+    text: >-
+      Humans constantly improve and revise their knowledge. They profit from structured
+      curricula and revise their earlier mistakes. Let us equip machine learning systems with
+      these remarkable adaptation capabilities.
+  - label: Machine Learning
+    heading: Models should be sustainably updatable!
+    text: >-
+      Today's ML algorithms tailor models to limited tasks. The resulting rigidity implies
+      frequent retraining whenever the world changes. Let us rethink this static approach and
+      root models in sustainable, modular updates instead.

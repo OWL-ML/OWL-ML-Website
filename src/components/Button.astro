@@ -1,0 +1,96 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+type Variant = 'primary' | 'secondary' | 'on-dark' | 'dark';
+type Props = {
+  variant?: Variant;
+  size?: 'md' | 'sm';
+  href?: string;
+  /** Full width on phones (stacked hero buttons) */
+  block?: boolean;
+} & Omit<HTMLAttributes<'a'> & HTMLAttributes<'button'>, 'class'> & { class?: string };
+
+const { variant = 'primary', size = 'md', href, block = false, class: cls, ...rest } = Astro.props;
+const classes = ['btn', `btn-${variant}`, `btn-${size}`, block && 'btn-block', cls];
+---
+
+{href ? (
+  <a href={href} class:list={classes} {...rest}>
+    <slot />
+  </a>
+) : (
+  <button type="button" class:list={classes} {...rest}>
+    <slot />
+  </button>
+)}
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+    text-align: center;
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+  .btn-md {
+    padding: 13px 24px;
+    font-size: 16px;
+  }
+  .btn-sm {
+    padding: 9px 18px;
+    font-size: 15px;
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: var(--on-orange);
+  }
+  .btn-primary:hover {
+    background: #d97c33;
+    color: var(--on-orange);
+  }
+  .btn-secondary {
+    background: var(--white);
+    color: var(--ink);
+    border-color: var(--teal-300);
+  }
+  .btn-secondary:hover {
+    border-color: var(--teal-500);
+    color: var(--ink);
+  }
+  .btn-on-dark {
+    background: transparent;
+    color: var(--white);
+    border-color: var(--outline-on-dark);
+  }
+  .btn-on-dark:hover {
+    border-color: var(--on-dark);
+    color: var(--white);
+  }
+  .btn-on-dark:focus-visible {
+    outline-color: var(--peach-light);
+  }
+  .btn-dark {
+    background: var(--teal-700);
+    color: var(--white);
+  }
+  .btn-dark:hover {
+    background: var(--teal-800);
+    color: var(--white);
+  }
+  @media (max-width: 720px) {
+    .btn-block {
+      display: flex;
+      width: 100%;
+    }
+  }
+</style>

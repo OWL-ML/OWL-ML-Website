@@ -1,0 +1,704 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Picture } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Chip from '../../components/Chip.astro';
+import YearRail from '../../components/YearRail.astro';
+import PublicationItem from '../../components/PublicationItem.astro';
+import FigureViewer from '../../components/FigureViewer.astro';
+import TalkItem from '../../components/TalkItem.astro';
+import PersonAvatar from '../../components/PersonAvatar.astro';
+import MiniMap from '../../components/profile/MiniMap.astro';
+import { getTheme } from '../../lib/themes';
+import {
+  getPublications,
+  getTalks,
+  getNews,
+  getCourses,
+  alphabetical,
+  groupBy,
+} from '../../lib/data';
+import { photoFor } from '../../lib/photos';
+import { newsTarget } from '../../lib/news';
+import { formatDate, isPlaceholder, titledName } from '../../lib/format';
+
+export async function getStaticPaths() {
+  const people = await getCollection('people');
+  return people.map((person) => ({ params: { id: person.id }, props: { person } }));
+}
+
+const { person } = Astro.props;
+const d = person.data;
+const { Content } = await render(person);
+const photo = await photoFor(d.photo);
+const firstName = d.name.split(' ')[0];
+const displayName = titledName(d);
+
+const themes = await Promise.all(d.themes.map(getTheme));
+const pubs = (await getPublications()).filter((p) => p.members.includes(person.id));
+const pubYears = groupBy(pubs, (p) => String(p.year));
+const talks = (await getTalks()).filter((t) => t.data.speakers.includes(person.id));
+const allPubs = await getPublications();
+const news = (await getNews()).filter(
+  (n) =>
+    n.data.people.includes(person.id) ||
+    (n.data.paper && allPubs.find((p) => p.key === n.data.paper)?.members.includes(person.id)),
+);
+
+// "Works with": lab members who co-authored a paper with this person, alphabetical (no counts).
+const coauthorIds = new Set(pubs.flatMap((p) => p.members).filter((m) => m !== person.id));
+const everyone = await getCollection('people');
+const coauthors = await Promise.all(
+  alphabetical(everyone.filter((p) => coauthorIds.has(p.id))).map(async (p) => ({
+    p,
+    photo: await photoFor(p.data.photo),
+  })),
+);
+// The lab head works with everyone: no list of names (by Martin's request)
+const withEveryone = d.group === 'lead';
+const courses = (await getCourses()).filter((c) => d.teaching.includes(c.id));
+
+const linkDefs = [
+  ['Email', d.email && !isPlaceholder(d.email) ? `mailto:${d.email}` : d.email],
+  ['Google Scholar', d.links?.scholar],
+  ['ORCID', d.links?.orcid],
+  ['GitHub', d.links?.github],
+  ['LinkedIn', d.links?.linkedin],
+  ['Website', d.links?.website],
+].filter((l): l is [string, string] => Boolean(l[1]));
+// Staff profiles show what to contact them about instead of publications, talks and news
+const isStaff = d.group === 'staff';
+const hasBio = Boolean(person.body?.trim());
+---
+
+<BaseLayout
+  title={displayName}
+  current="people"
+  description={`${displayName}: ${d.role}, Open World Lifelong Machine Learning Lab.`}
+  ogImage={`/og/people/${person.id}.png`}
+>
+  <PageHero
+    slot="band"
+    title={displayName}
+    crumbs={[{ label: 'People', href: '/people/' }, { label: d.name }]}
+  >
+    <Fragment slot="media">
+      {photo ? (
+        <Picture
+          src={photo}
+          alt={`Photo of ${displayName}`}
+          formats={['avif', 'webp']}
+          width={200}
+          height={200}
+          widths={[120, 200, 400]}
+          sizes="(max-width: 720px) 120px, 200px"
+          fit="cover"
+          loading="eager"
+          class="photo"
+          style={`view-transition-name:person-${person.id}`}
+        />
+      ) : (
+        <div
+          class="photo photo-empty"
+          aria-hidden="true"
+          style={`view-transition-name:person-${person.id}`}
+        >
+          <PersonAvatar name={d.name} size="fill" shape="square" />
+        </div>
+      )}
+    </Fragment>
+    <p class="role">
+      {d.role}
+      {d.pronouns && <span class="pronouns">({d.pronouns})</span>}
+    </p>
+    {linkDefs.length > 0 && (
+      <ul class="pills">
+        {linkDefs.map(([label, href]) => (
+          <li>
+            {isPlaceholder(href) ? (
+              <span class="pill pill-missing">
+                {label} <span class="placeholder-on-dark">{href}</span>
+              </span>
+            ) : (
+              <a class="pill" href={href}>
+                {label}
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    )}
+  </PageHero>
+
+  <div class="container layout">
+    <div class="main">
+      {(hasBio || themes.length > 0) && (
+        <section class="card about" aria-labelledby="about-h">
+          <h2 id="about-h">About</h2>
+          {hasBio && (
+            <div class="bio">
+              <Content />
+            </div>
+          )}
+          {themes.length > 0 && (
+            <div class="themes">
+              <span class="label" id="themes-label">
+                Research themes
+                {pubs.length > 0 && <span class="js-only"> · select one to follow it</span>}
+              </span>
+              <ul class="chips" aria-labelledby="themes-label">
+                {themes.map((t) => (
+                  <li>
+                    {pubs.length > 0 ? (
+                      <Chip
+                        variant="tint"
+                        as="a"
+                        href={`/publications/?theme=${t.id}&member=${person.id}`}
+                        data-profile-theme={t.id}
+                      >
+                        {t.name}
+                      </Chip>
+                    ) : (
+                      <Chip variant="tint" as="span">
+                        {t.name}
+                      </Chip>
+                    )}
+                  </li>
+                ))}
+                {pubs.length > 0 && (
+                  <li class="js-only">
+                    <button type="button" class="clear" data-clear-theme hidden>
+                      Clear filter
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
+      {isStaff ? (
+        <section class="card about" aria-labelledby="contact-for-h">
+          <h2 id="contact-for-h">Contact {firstName} about</h2>
+          <ul class="contact-for">
+            {d.contact_for.map((c) => (
+              <li class:list={[isPlaceholder(c) && 'placeholder']}>{c}</li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <>
+          <nav class="tabs" aria-label="On this page" data-profile-tabs>
+            <Chip as="a" href="#publications" size="lg" active data-tab="publications">
+              Publications
+            </Chip>
+            {talks.length > 0 && (
+              <Chip as="a" href="#talks" size="lg" data-tab="talks">
+                Talks
+              </Chip>
+            )}
+            <Chip as="a" href="#news" size="lg" data-tab="news">
+              News
+            </Chip>
+          </nav>
+
+          <section id="publications" class="list-section" aria-labelledby="pubs-h" data-tab-panel>
+            <h2 id="pubs-h" class="list-h">
+              Publications
+            </h2>
+            <p class="status js-only" id="profile-status" aria-live="polite">
+              <span data-status-text></span>
+              <button type="button" class="clear" data-clear-theme hidden>
+                Show all
+              </button>
+            </p>
+            {pubYears.length ? (
+              pubYears.map(([year, items]) => (
+                <YearRail label={year} size="sm" level={3} data-year-group>
+                  {items.map((p) => (
+                    <PublicationItem pub={p} size="sm" headingLevel={4} />
+                  ))}
+                </YearRail>
+              ))
+            ) : (
+              <p class="empty">No publications listed yet.</p>
+            )}
+          </section>
+
+          {talks.length > 0 && (
+            <section id="talks" class="list-section" aria-labelledby="talks-h" data-tab-panel>
+              <h2 id="talks-h" class="list-h">
+                Talks
+              </h2>
+              {talks.map((t) => (
+                <TalkItem talk={t} />
+              ))}
+            </section>
+          )}
+
+          <section id="news" class="list-section" aria-labelledby="news-h" data-tab-panel>
+            <h2 id="news-h" class="list-h">
+              News
+            </h2>
+            {news.length ? (
+              <ul class="news">
+                {news.map((n) => {
+                  const t = newsTarget(n);
+                  return (
+                    <li>
+                      <span class="meta">{formatDate(n.data.date)}</span>
+                      {t ? <a href={t.href}>{n.data.title}</a> : <span>{n.data.title}</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p class="empty">No news yet.</p>
+            )}
+          </section>
+        </>
+      )}
+    </div>
+
+    <aside class="side" aria-label={`More about ${displayName}`}>
+      {themes.length > 0 && (
+        <section class="card side-card map-card" aria-labelledby="map-h">
+          <h2 id="map-h">In the research map</h2>
+          <MiniMap
+            personId={person.id}
+            name={d.name}
+            themes={themes.map((t) => ({ id: t.id, short: t.short }))}
+            coauthors={
+              withEveryone ? [] : coauthors.map(({ p }) => ({ id: p.id, name: p.data.name }))
+            }
+            withEveryone={withEveryone}
+          />
+        </section>
+      )}
+      {withEveryone ? (
+        <section class="card side-card" aria-labelledby="works-h">
+          <h2 id="works-h">Works with</h2>
+          <p class="note">
+            Everyone in the lab. <a href="/people/">Meet the team →</a>
+          </p>
+        </section>
+      ) : (
+        coauthors.length > 0 && (
+          <section class="card side-card" aria-labelledby="works-h">
+            <h2 id="works-h">Works with</h2>
+            <p class="note">
+              Lab members who co-authored a paper with {firstName}, in alphabetical order.
+            </p>
+            <ul class="coauthors">
+              {coauthors.map(({ p, photo }) => (
+                <li>
+                  <a href={`/people/${p.id}/`}>
+                    <PersonAvatar name={p.data.name} photo={photo} size={40} />
+                    <span>
+                      <span class="co-name">{titledName(p.data)}</span>
+                      <span class="co-role">{p.data.role}</span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      )}
+      {courses.length > 0 && (
+        <section class="card side-card" aria-labelledby="teach-h">
+          <h2 id="teach-h">Teaching</h2>
+          <ul class="teaching">
+            {courses.map((c) => (
+              <li>
+                <a href={`/teaching/#course-${c.id}`}>{c.name}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <section class="card side-card" aria-labelledby="contact-h">
+        <h2 id="contact-h">Contact</h2>
+        <ul class="contact">
+          {d.office && <li>{d.office}</li>}
+          {d.email &&
+            (isPlaceholder(d.email) ? (
+              <li>Email {d.email}</li>
+            ) : (
+              <li>
+                <a href={`mailto:${d.email}`}>{d.email}</a>
+              </li>
+            ))}
+          {d.office_hours && <li>{d.office_hours}</li>}
+        </ul>
+      </section>
+    </aside>
+  </div>
+  <FigureViewer />
+</BaseLayout>
+
+<script>
+  import { animateChange, revealPanel, transitionName } from '../../lib/motion';
+
+  // Profile enhancements: tabs (Publications / Talks / News) and a theme filter on the
+  // publication list. Without JavaScript all three sections are shown and the theme chips link
+  // to the filtered publications page.
+  const tabsNav = document.querySelector<HTMLElement>('[data-profile-tabs]');
+  if (tabsNav) {
+    const tabs = [...tabsNav.querySelectorAll<HTMLAnchorElement>('[data-tab]')];
+    const panels = [...document.querySelectorAll<HTMLElement>('[data-tab-panel]')];
+    tabsNav.setAttribute('role', 'tablist');
+    tabs.forEach((t) => {
+      t.setAttribute('role', 'tab');
+      t.setAttribute('aria-controls', t.dataset.tab!);
+    });
+    panels.forEach((p) => {
+      p.setAttribute('role', 'tabpanel');
+      p.querySelector('.list-h')?.classList.add('sr-only');
+    });
+    let selected = false; // the first tab (page load) is not animated
+    const select = (id: string, focus = false) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === id;
+        t.setAttribute('aria-selected', String(on));
+        t.removeAttribute('aria-current');
+        t.classList.toggle('is-active', on);
+        t.tabIndex = on ? 0 : -1;
+        if (on && focus) t.focus();
+      });
+      const before = panels.find((p) => !p.hidden);
+      panels.forEach((p) => (p.hidden = p.id !== id));
+      const now = panels.find((p) => !p.hidden);
+      if (selected && now !== before) revealPanel(now); // a different tab fades in
+      selected = true;
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', (e) => {
+        e.preventDefault();
+        select(t.dataset.tab!);
+        history.replaceState(null, '', `#${t.dataset.tab}`);
+      });
+      t.addEventListener('keydown', (e) => {
+        const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (step) {
+          e.preventDefault();
+          select(tabs[(i + step + tabs.length) % tabs.length]!.dataset.tab!, true);
+        }
+      });
+    });
+    const fromHash = location.hash.slice(1);
+    select(tabs.some((t) => t.dataset.tab === fromHash) ? fromHash : 'publications');
+
+    // Theme filter: one theme at a time; selecting it again shows everything.
+    const chips = [...document.querySelectorAll<HTMLAnchorElement>('[data-profile-theme]')];
+    const items = [...document.querySelectorAll<HTMLElement>('#publications .pub')];
+    const groups = [...document.querySelectorAll<HTMLElement>('#publications [data-year-group]')];
+    const statusText = document.querySelector<HTMLElement>('[data-status-text]');
+    const clears = [...document.querySelectorAll<HTMLButtonElement>('[data-clear-theme]')];
+    let theme = '';
+    const apply = () => {
+      chips.forEach((c) => {
+        c.setAttribute('role', 'button');
+        c.setAttribute('aria-pressed', String(c.dataset.profileTheme === theme));
+        c.classList.toggle('is-active', c.dataset.profileTheme === theme);
+      });
+      items.forEach((el) => {
+        el.hidden = !!theme && !(el.dataset.themes ?? '').split(' ').includes(theme);
+      });
+      groups.forEach((g) => (g.hidden = !g.querySelector('.pub:not([hidden])')));
+      const chip = chips.find((c) => c.dataset.profileTheme === theme);
+      const none = items.every((el) => el.hidden);
+      if (statusText)
+        statusText.textContent = !theme
+          ? ''
+          : none
+            ? `No publications in ${chip?.textContent?.trim()} yet.`
+            : `Filtered to ${chip?.textContent?.trim()}.`;
+      clears.forEach((b) => (b.hidden = !theme));
+    };
+    // a theme chip animates the list like the publications page (src/lib/motion.ts); when it
+    // first switches to the Publications tab, that tab fades in and the list is just filtered
+    const pubPanel = document.getElementById('publications');
+    const named = (): [HTMLElement, string][] => [
+      ...items.map((el): [HTMLElement, string] => [el, transitionName('pub', el.id)]),
+      ...groups.map((g, i): [HTMLElement, string] => [g, transitionName('year', String(i))]),
+    ];
+    const applyAnimated = () => {
+      if (pubPanel && !pubPanel.hidden) animateChange(apply, named);
+      else apply();
+    };
+    chips.forEach((c) =>
+      c.addEventListener('click', (e) => {
+        e.preventDefault();
+        theme = theme === c.dataset.profileTheme ? '' : c.dataset.profileTheme!;
+        const wasShown = pubPanel && !pubPanel.hidden;
+        select('publications');
+        if (wasShown) applyAnimated();
+        else apply();
+      }),
+    );
+    chips.forEach((c) =>
+      c.addEventListener('keydown', (e) => {
+        if (e.key === ' ') {
+          e.preventDefault();
+          c.click();
+        }
+      }),
+    );
+    clears.forEach((b) =>
+      b.addEventListener('click', () => {
+        theme = '';
+        applyAnimated();
+      }),
+    );
+    apply();
+  }
+</script>
+
+<style>
+  .photo {
+    width: 200px;
+    height: 200px;
+    border-radius: 26px;
+    object-fit: cover;
+    flex: none;
+  }
+  .photo-empty {
+    display: flex;
+    overflow: hidden;
+  }
+  .role {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--peach-light);
+  }
+  .pronouns {
+    margin-left: 10px;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--on-dark-muted);
+  }
+  .pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pill {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--outline-on-dark);
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  a.pill:hover {
+    border-color: var(--on-dark);
+  }
+  .pill-missing {
+    border-style: dashed;
+    color: var(--on-dark-muted);
+  }
+  .placeholder-on-dark {
+    color: var(--on-dark-subtle);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 36px;
+    align-items: start;
+    padding-block: 48px 88px;
+  }
+  .main {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+  }
+  .card {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .about h2 {
+    font-size: 32px;
+  }
+  .bio {
+    color: var(--body);
+    max-width: 720px;
+  }
+  .bio :global(p + p) {
+    margin-top: 0.8em;
+  }
+  .themes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .list-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-margin-top: 16px;
+  }
+  .status {
+    font-size: 15px;
+    color: var(--body);
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+  }
+  .status:has(span:empty):has(.clear[hidden]) {
+    display: none;
+  }
+  .clear {
+    font-weight: 600;
+    color: var(--teal-600);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .chips .clear {
+    padding: 6px 4px;
+    font-size: 15px;
+  }
+  .contact-for {
+    margin: 0;
+    padding-left: 1.2em;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--body);
+  }
+  .list-h {
+    font-size: 28px;
+  }
+  .empty {
+    color: var(--muted);
+  }
+  .news {
+    margin: 0;
+    padding: 8px 24px;
+    list-style: none;
+    background: var(--white);
+    border-radius: 18px;
+  }
+  .news li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 0;
+  }
+  .news li + li {
+    border-top: 1px solid var(--hairline);
+  }
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .side-card {
+    padding: 24px;
+    gap: 10px;
+  }
+  .side-card h2 {
+    font-size: 22px;
+  }
+  .note {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .coauthors,
+  .teaching,
+  .contact {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .coauthors a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .coauthors a > span {
+    display: flex;
+    flex-direction: column;
+  }
+  .co-name {
+    font-weight: 600;
+  }
+  .coauthors a:hover .co-name {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
+  .co-role {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .teaching a {
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .teaching a:hover {
+    text-decoration: underline;
+  }
+  @media (max-width: 960px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .map-card {
+      display: none;
+    }
+  }
+  @media (max-width: 720px) {
+    .layout {
+      padding-block: 28px 48px;
+    }
+    .photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 22px;
+    }
+    .role {
+      font-size: 17px;
+    }
+    .card {
+      padding: 24px;
+    }
+    .tabs :global(.chip) {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+</style>

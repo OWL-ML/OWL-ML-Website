@@ -1,0 +1,74 @@
+name: Add a talk
+description: A talk, keynote, lecture or poster, with slides or a recording if there is one.
+title: 'Talk: '
+labels: [content]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Talks appear on the Talks page and on the speakers' profiles. Recordings only load after a
+        visitor clicks "Load video". The file goes into `src/content/talks/<date>-<slug>.md`.
+        A maintainer, or a lab member working with Claude Code on their computer, turns this
+        into a pull request.
+  - type: input
+    id: date
+    attributes:
+      label: Date
+      placeholder: 2026-10-14
+    validations:
+      required: true
+  - type: input
+    id: title
+    attributes:
+      label: Title
+    validations:
+      required: true
+  - type: input
+    id: event
+    attributes:
+      label: Event and location
+      placeholder: ContinualAI Seminar, online
+    validations:
+      required: true
+  - type: input
+    id: speakers
+    attributes:
+      label: Speakers (ids)
+      placeholder: mundt
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - talk
+        - keynote
+        - lecture
+        - poster
+    validations:
+      required: true
+  - type: input
+    id: slides
+    attributes:
+      label: Slides or poster (optional)
+      description: A permanent link, ideally a DOI.
+  - type: input
+    id: video
+    attributes:
+      label: YouTube recording (optional)
+      placeholder: https://www.youtube.com/watch?v=...
+  - type: checkboxes
+    id: themes
+    attributes:
+      label: Research themes (optional)
+      description: Theme names and ids come from `src/data/themes.yml`.
+      options:
+        - label: Generative & Dynamic Models (gd)
+        - label: Memory & Consolidation (mc)
+        - label: Continual Machine Learning (cl)
+        - label: Participatory AI (pai)
+  - type: textarea
+    id: abstract
+    attributes:
+      label: Abstract (optional)

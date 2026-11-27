@@ -1,0 +1,83 @@
+---
+import PersonAvatar from './PersonAvatar.astro';
+import { photoFor } from '../lib/photos';
+import type { PersonEntry } from '../lib/data';
+import { titledName } from '../lib/format';
+
+// Square photo (or initials) with name and role; the whole card links to the profile.
+interface Props {
+  person: PersonEntry;
+}
+const { person } = Astro.props;
+const photo = await photoFor(person.data.photo);
+---
+
+<a class="team-card" href={`/people/${person.id}/`}>
+  <PersonAvatar
+    name={person.data.name}
+    photo={photo}
+    size="fill"
+    shape="square"
+    transitionName={`person-${person.id}`}
+  />
+  <span class="text">
+    <span class="name">{titledName(person.data)}</span>
+    {person.data.pronouns && <span class="pronouns">{person.data.pronouns}</span>}
+    <span class="role">{person.data.role}</span>
+  </span>
+</a>
+
+<style>
+  .team-card {
+    /* cards in a row share the height of the tallest (e.g. a role on two lines) */
+    height: 100%;
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 12px 12px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .team-card:hover .name {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
+  /* pointing at a card lifts it a little and zooms the photo (Martin, November 2026); only with a
+     mouse or trackpad, and not under reduced motion */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .team-card {
+      transition:
+        transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.25s ease;
+    }
+    .team-card :global(.avatar img) {
+      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .team-card:hover,
+    .team-card:focus-visible {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgb(18 59 57 / 0.12);
+    }
+    .team-card:hover :global(.avatar img) {
+      transform: scale(1.04);
+    }
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    padding: 0 4px;
+  }
+  .name {
+    font-weight: 600;
+  }
+  .pronouns {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .role {
+    font-size: 15px;
+    color: var(--muted);
+  }
+</style>

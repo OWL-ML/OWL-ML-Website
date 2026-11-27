@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PageHero from '../../../components/PageHero.astro';
+import { demos } from '../../../demos/registry';
+import { getCourses } from '../../../lib/data';
+
+// All course demos, each with its permanent address (docs/DEMOS.md).
+const courses = await getCourses();
+const courseName = (id: string) => courses.find((c) => c.id === id)?.name ?? id;
+---
+
+<BaseLayout
+  title="Course demos"
+  current="teaching"
+  description="Small interactive demos from the OWL-ML lab's lecture courses."
+>
+  <PageHero
+    slot="band"
+    title="Course demos"
+    lead="One small, hands-on piece of each lecture course. Everything runs in your browser, and nothing is stored or sent."
+    crumbs={[{ label: 'Teaching', href: '/teaching/' }, { label: 'Demos' }]}
+  />
+  <div class="container page">
+    <ul class="list">
+      {demos.map((d) => (
+        <li>
+          <p class="course">{courseName(d.course)}</p>
+          <h2>
+            <a href={`/teaching/demos/${d.slug}/`}>{d.title}</a>
+          </h2>
+          <p>{d.learningPoint}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 40px 88px;
+  }
+  .list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: 16px;
+  }
+  li {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .course {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal-800);
+  }
+  h2 {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+  li p:last-child {
+    color: var(--body);
+    font-size: 15px;
+  }
+</style>

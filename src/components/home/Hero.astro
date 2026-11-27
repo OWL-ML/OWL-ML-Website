@@ -1,0 +1,189 @@
+---
+import Button from '../Button.astro';
+import HeroNetwork from './HeroNetwork.astro';
+import { site } from '../../lib/site';
+
+// Homepage hero: eyebrow and headline, then the network figure (HeroNetwork) with the mission text
+// and the two buttons below it, as wide as the figure. Screen readers get one static sentence; the
+// visible heading with the rolling word is aria-hidden. The word changes every 2.5 s (CSS only); under prefers-reduced-motion only
+// the first word is shown, and the roll pauses while the hero is off-screen.
+const words = site.tagline_words;
+const n = words.length;
+const step = 100 / n;
+const rollKeyframes = words
+  .map((_, i) => {
+    const start = (i * step).toFixed(2);
+    const hold = (i * step + step * 0.8).toFixed(2);
+    return `${start}%, ${hold}% { transform: translateY(-${((i * 100) / n).toFixed(4)}%); }`;
+  })
+  .join(' ');
+const rollCss = `@keyframes owl-roll { ${rollKeyframes} 100% { transform: translateY(0); } }`;
+const rollSeconds = n * 2.5;
+const spoken = `${site.headline_prefix} ${words
+  .map((w) => w.replace(/\.$/, ''))
+  .join(', ')
+  .replace(/, ([^,]*)$/, ' and $1')}.`;
+---
+
+<section class="hero">
+  <div class="container inner">
+    <div class="text">
+      <p class="eyebrow">{site.eyebrow}</p>
+      <h1>
+        <span class="sr-only">{spoken}</span>
+        <span aria-hidden="true" class="visible">
+          <span class="prefix">{site.headline_prefix}</span>
+          <span class="roll">
+            <span class="words" style={`--roll-time:${rollSeconds}s`} data-roll>
+              {words.map((w) => (
+                <span class="word">{w}</span>
+              ))}
+            </span>
+          </span>
+        </span>
+      </h1>
+    </div>
+    <div class="block">
+      <HeroNetwork description={site.hero_figure} />
+      <div class="below">
+        <p class="mission">{site.mission}</p>
+        <div class="actions">
+          <Button href="#research" block>
+            Explore our research
+          </Button>
+          <Button href="/theses/" variant="on-dark" block>
+            Theses
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style is:global set:html={rollCss}></style>
+
+<script>
+  const roll = document.querySelector<HTMLElement>('[data-roll]');
+  if (roll && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => {
+      roll.style.animationPlayState = entry?.isIntersecting ? 'running' : 'paused';
+    }).observe(roll);
+  }
+</script>
+
+<style>
+  .hero {
+    background: var(--teal-700);
+    color: var(--on-dark);
+  }
+  .inner {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    padding-block: 44px 64px;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  /* figure, then mission text and buttons below it, as wide as the rest of the page's content
+     (Martin, November 2026: it was capped at 940 px and did not line up with the sections below) */
+  .block {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .below {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 40px;
+    align-items: center;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--peach-light);
+  }
+  h1 {
+    color: var(--white);
+    font-size: 62px;
+    line-height: 1.06;
+  }
+  .prefix,
+  .roll {
+    display: block;
+  }
+  .roll {
+    height: 1.16em;
+    overflow: hidden;
+  }
+  .words {
+    display: flex;
+    flex-direction: column;
+    animation: owl-roll var(--roll-time) ease-in-out infinite;
+  }
+  .word {
+    display: block;
+    height: 1.16em;
+    color: var(--orange);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .words {
+      animation: none !important;
+    }
+  }
+  .mission {
+    font-size: 18px;
+    color: var(--on-dark-muted);
+    max-width: 68ch; /* readable line length now that the block is full width */
+    text-wrap: pretty; /* no single word alone on the last line */
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .actions :global(.btn) {
+    width: 100%;
+  }
+  .hero :global(a:focus-visible) {
+    outline-color: var(--peach-light);
+  }
+  @media (max-width: 900px) {
+    .below {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+    }
+  }
+  @media (max-width: 1000px) {
+    h1 {
+      font-size: clamp(34px, 7vw, 56px);
+    }
+  }
+  @media (max-width: 720px) {
+    .inner {
+      padding-block: 24px 40px;
+      gap: 22px;
+    }
+    .text {
+      gap: 18px;
+    }
+    .eyebrow {
+      font-size: 12px;
+    }
+    h1 {
+      font-size: 38px;
+      line-height: 1.1;
+    }
+    .mission {
+      font-size: 17px;
+    }
+    .actions {
+      gap: 10px;
+    }
+  }
+</style>

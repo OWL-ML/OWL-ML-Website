@@ -1,0 +1,47 @@
+---
+import { authorParts } from '../lib/content/authors';
+import { personNames } from '../lib/data';
+import type { Publication } from '../lib/content/schemas';
+
+// Authors of a paper; lab members bold and linked to their profiles.
+interface Props {
+  pub: Pick<Publication, 'authors' | 'members'>;
+  class?: string;
+}
+const { pub, class: cls } = Astro.props;
+const parts = authorParts(pub, await personNames());
+const placeholder = parts.length === 1 && !parts[0]!.person && /^\[.*\]$/.test(parts[0]!.text);
+---
+
+<p class:list={['authors', cls]}>
+  {placeholder ? (
+    <span class="placeholder">{parts[0]!.text}</span>
+  ) : (
+    parts.map((p, i) => (
+      <>
+        {p.person ? (
+          <a href={`/people/${p.person}/`} class="member">
+            {p.text}
+          </a>
+        ) : (
+          <span>{p.text}</span>
+        )}
+        {i < parts.length - 1 && ', '}
+      </>
+    ))
+  )}
+</p>
+
+<style>
+  .authors {
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .member {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .member:hover {
+    color: var(--teal-600);
+  }
+</style>

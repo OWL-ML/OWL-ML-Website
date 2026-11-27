@@ -1,0 +1,59 @@
+name: Add news
+description: A short news item (paper, award, new member, funding, opportunity, event).
+title: 'News: '
+labels: [content]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        News items are short: a headline and, if needed, a few sentences that open under
+        "Read more". The file goes into `src/content/news/<date>-<slug>.md`.
+        A maintainer, or a lab member working with Claude Code on their computer, turns this
+        into a pull request.
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - paper
+        - award
+        - people
+        - funding
+        - opportunity
+        - event
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: Date
+      description: YYYY-MM-DD, the day it happened or was announced.
+      placeholder: 2026-10-14
+    validations:
+      required: true
+  - type: input
+    id: headline
+    attributes:
+      label: Headline
+    validations:
+      required: true
+  - type: input
+    id: related
+    attributes:
+      label: Related paper or people (optional)
+      description: A paper (title or link; it should also be on the Publications page) or person ids.
+  - type: input
+    id: link
+    attributes:
+      label: Link (optional)
+      description: Where readers find more.
+  - type: input
+    id: deadline
+    attributes:
+      label: Deadline (opportunities only)
+      description: YYYY-MM-DD. The item is shown as closed after this date.
+  - type: textarea
+    id: body
+    attributes:
+      label: Text (optional)
+      description: A few short paragraphs, plain and factual. Images can be dragged in.

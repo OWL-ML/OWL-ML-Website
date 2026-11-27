@@ -1,0 +1,207 @@
+---
+import Icon from '../Icon.astro';
+
+// A recorded talk. Nothing is loaded from YouTube until the visitor asks for it (two-click embed):
+// the card shows a static drawing and the consent text; "Load video" replaces the drawing with a
+// player from youtube-nocookie.com. "Watch on YouTube" always works, also without JavaScript.
+interface Props {
+  youtube: string;
+  duration?: string;
+  title: string;
+  meta: string;
+  speakers: { name: string; href?: string }[];
+  slides?: string;
+}
+const { youtube, duration, title, meta, speakers, slides } = Astro.props;
+const watch = `https://www.youtube.com/watch?v=${youtube}`;
+---
+
+<article class="recording" data-youtube={youtube} data-title={title}>
+  <div class="frame">
+    <div class="poster" aria-hidden="true" data-poster>
+      <span class="line l1"></span>
+      <span class="line l2"></span>
+      <span class="line l3"></span>
+      <span class="box"></span>
+      <span class="play">
+        <Icon name="play" size={22} />
+      </span>
+      {duration && <span class="duration">{duration}</span>}
+    </div>
+    <div class="consent">
+      <p>
+        Playing this video loads it from YouTube, which transfers data to Google.
+        <a href="/legal/#youtube">Privacy statement</a>
+      </p>
+      <button type="button" class="load js-only" data-load-video>
+        <Icon name="play" size={16} /> Load video<span class="sr-only">: {title}</span>
+      </button>
+    </div>
+  </div>
+  <p class="meta">{meta}</p>
+  <h3>{title}</h3>
+  <p class="links">
+    {speakers.map((s) =>
+      s.href ? (
+        <a class="speaker" href={s.href}>
+          {s.name}
+        </a>
+      ) : (
+        <span class="speaker">{s.name}</span>
+      ),
+    )}
+    <a href={watch}>
+      Watch on YouTube ↗<span class="sr-only"> (opens youtube.com)</span>
+    </a>
+    {slides && <a href={slides}>Slides</a>}
+  </p>
+</article>
+
+<script>
+  // Two-click embed: the player (and with it any request to YouTube) is created only on click.
+  for (const card of document.querySelectorAll<HTMLElement>('[data-youtube]')) {
+    const button = card.querySelector<HTMLButtonElement>('[data-load-video]');
+    const poster = card.querySelector<HTMLElement>('[data-poster]');
+    button?.addEventListener('click', () => {
+      const id = card.dataset.youtube!;
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id) || !poster) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
+      iframe.title = `Video: ${card.dataset.title}`;
+      iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      iframe.className = 'player';
+      poster.replaceWith(iframe);
+      button.closest('.consent')?.setAttribute('hidden', '');
+      iframe.focus();
+    });
+  }
+</script>
+
+<style>
+  .recording {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .frame {
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--teal-700);
+    margin-bottom: 8px;
+  }
+  .poster {
+    position: relative;
+    aspect-ratio: 16 / 7.6;
+  }
+  .line {
+    position: absolute;
+    left: 7%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--white);
+  }
+  .l1 {
+    top: 14%;
+    width: 46%;
+  }
+  .l2 {
+    top: 26%;
+    width: 30%;
+  }
+  .l3 {
+    top: 38%;
+    width: 22%;
+    height: 5px;
+    background: var(--orange);
+  }
+  .box {
+    position: absolute;
+    right: 7%;
+    top: 16%;
+    width: 28%;
+    height: 45%;
+    border-radius: 8px;
+    background: var(--teal-line-dark);
+  }
+  .play {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%);
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .duration {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    background: var(--white);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .consent {
+    background: var(--teal-750);
+    color: var(--on-dark-muted);
+    padding: 16px 20px;
+    font-size: 14px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .consent a {
+    color: var(--white);
+  }
+  .consent a:focus-visible {
+    outline-color: var(--peach-light);
+  }
+  .load {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--radius-pill);
+    border: 0;
+    background: var(--orange);
+    color: var(--on-orange);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .load:focus-visible {
+    outline-color: var(--peach-light);
+  }
+  .frame :global(.player) {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.2;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .speaker {
+    color: var(--ink);
+  }
+</style>

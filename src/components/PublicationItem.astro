@@ -1,0 +1,244 @@
+---
+import AwardBadge from './AwardBadge.astro';
+import VenueLabel from './VenueLabel.astro';
+import ThemeTag from './ThemeTag.astro';
+import Authors from './Authors.astro';
+import type { PublicationData } from '../lib/data';
+import { landingPage } from '../lib/paper-page';
+import { paperImage } from '../lib/paper-images';
+import { Picture, getImage } from 'astro:assets';
+
+// One paper in a list (publications page, profiles). The `id` is the BibTeX key, so news items
+// can link straight to /publications/#<key>. With a teaser figure (BibTeX `thumbnail`, file in
+// src/assets/papers/), a small version sits beside the text and links to the full figure, which
+// FigureViewer shows in place.
+interface Props {
+  pub: PublicationData;
+  /** profile lists use slightly smaller cards */
+  size?: 'md' | 'sm';
+  headingLevel?: 3 | 4;
+}
+const { pub, size = 'md', headingLevel = 3 } = Astro.props;
+const H = `h${headingLevel}` as 'h3' | 'h4';
+const spotlight = pub.award && /spotlight|oral/i.test(pub.award);
+const noteLabel: Record<string, string> = {
+  position: 'Position',
+  workshop: 'Workshop',
+  preprint: 'Preprint',
+  journal: 'Journal',
+};
+const redundant =
+  pub.venue_short.toLowerCase().includes(pub.note_type ?? '') ||
+  (pub.note_type === 'preprint' && /arxiv/i.test(pub.venue_short));
+const venue =
+  pub.note_type && !redundant
+    ? `${pub.venue_short} · ${noteLabel[pub.note_type]}`
+    : pub.venue_short;
+const links = [
+  ['Paper', landingPage(pub)],
+  ['Code', pub.code],
+  ['Project', pub.project],
+  ['Slides', pub.slides],
+  ['Video', pub.video],
+  ...pub.links.map((l) => [l.label, l.url]),
+].filter((l): l is [string, string] => Boolean(l[1]));
+const figure = await paperImage(pub.thumbnail);
+const full = figure
+  ? await getImage({ src: figure, width: Math.min(figure.width, 1800), format: 'webp' })
+  : undefined;
+const thumbWidth = size === 'sm' ? 180 : 220;
+---
+
+<article
+  class:list={['pub', `size-${size}`, figure && 'has-figure']}
+  id={pub.key}
+  data-themes={pub.themes.join(' ')}
+  data-members={pub.members.join(' ')}
+  data-title={pub.title.toLowerCase()}
+  data-year={pub.year}
+>
+  {figure && full && (
+    <a
+      class="figure"
+      href={full.src}
+      data-figure
+      data-figure-width={full.attributes.width}
+      data-figure-height={full.attributes.height}
+      data-figure-caption={pub.title}
+    >
+      <Picture
+        src={figure}
+        alt=""
+        formats={['avif', 'webp']}
+        widths={[thumbWidth, thumbWidth * 2, 660]}
+        sizes={`(max-width: 720px) calc(100vw - 80px), ${thumbWidth}px`}
+        class="figure-img"
+      />
+      <span class="sr-only">Figure of “{pub.title}”, full size</span>
+    </a>
+  )}
+  <div class="body">
+    {pub.award && <AwardBadge kind={spotlight ? 'spotlight' : 'award'}>{pub.award}</AwardBadge>}
+    <H class="title">{pub.title}</H>
+    <Authors pub={pub} />
+    {pub.note && <p class="note">{pub.note}</p>}
+    <div class="meta-row">
+      <VenueLabel>{venue}</VenueLabel>
+      {pub.themes.map((t) => (
+        <ThemeTag id={t} />
+      ))}
+      {links.map(([label, href]) => (
+        <a class="link" href={href}>
+          {label}
+          <span class="sr-only"> of “{pub.title}”</span>
+        </a>
+      ))}
+      <details class="bibtex">
+        <summary class="link">
+          BibTeX<span class="sr-only"> of “{pub.title}”</span>
+        </summary>
+        <pre><code>{pub.bibtex}</code></pre>
+      </details>
+    </div>
+  </div>
+</article>
+
+<style>
+  .pub {
+    background: var(--white);
+    border-radius: var(--radius-card-sm);
+    padding: 24px 28px;
+    display: flex;
+    gap: 24px;
+    scroll-margin-top: 24px;
+  }
+  .body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  /* the teaser figure: whole, on white, in a fixed box beside the text */
+  .figure {
+    flex: none;
+    align-self: flex-start;
+    width: 220px;
+    height: 140px;
+    padding: 6px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-in;
+  }
+  .figure:hover {
+    border-color: var(--teal-300);
+  }
+  /* pointing at a figure lifts it a little (it opens large on click); only with a mouse or
+     trackpad, and not under reduced motion */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .figure {
+      transition:
+        transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.25s ease,
+        border-color 0.2s ease;
+    }
+    .figure:hover,
+    .figure:focus-visible {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgb(18 59 57 / 0.12);
+    }
+  }
+  .size-sm .figure {
+    width: 180px;
+    height: 116px;
+  }
+  .figure :global(.figure-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .pub:target {
+    outline: 3px solid var(--orange);
+    outline-offset: 2px;
+  }
+  .size-sm {
+    border-radius: 18px;
+    padding: 22px 24px;
+  }
+  .title {
+    font-family: var(--font-body);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .size-sm .title {
+    font-size: 19px;
+  }
+  .note {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 20px;
+    margin-top: 4px;
+  }
+  .meta-row :global(.theme-tag) {
+    margin-right: -8px;
+  }
+  .link {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--teal-600);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .bibtex {
+    display: contents;
+  }
+  .bibtex summary {
+    list-style: none;
+  }
+  .bibtex summary::-webkit-details-marker {
+    display: none;
+  }
+  .bibtex pre {
+    flex-basis: 100%;
+    margin: 4px 0 0;
+    padding: 14px 16px;
+    background: var(--teal-50);
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+    /* wrap long lines (titles, URLs) within the card instead of widening it */
+    min-width: 0;
+    width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 720px) {
+    .pub {
+      padding: 20px;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .figure,
+    .size-sm .figure {
+      width: 100%;
+      height: 170px;
+    }
+    .title {
+      font-size: 18px;
+    }
+  }
+</style>

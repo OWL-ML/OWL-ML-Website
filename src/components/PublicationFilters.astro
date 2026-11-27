@@ -1,0 +1,251 @@
+---
+import { getThemes } from '../lib/themes';
+import { getPublications, alphabetical } from '../lib/data';
+import { titledName } from '../lib/format';
+import { getCollection } from 'astro:content';
+
+// Filter card for the publication list: title search, lab member, year, theme. Only shown when
+// JavaScript runs (without it, the full list is shown). The URL keeps the filter
+// (?theme=mc&member=storch&year=2025&q=memory) so filtered views can be linked. The BibTeX button
+// in the page hero ([data-bib-export]) downloads the entries shown.
+const themes = await getThemes();
+const pubs = await getPublications();
+const withPapers = new Set(pubs.flatMap((p) => p.members));
+const members = alphabetical(await getCollection('people')).filter((p) => withPapers.has(p.id));
+const names = Object.fromEntries(members.map((m) => [m.id, titledName(m.data)]));
+const themeNames = Object.fromEntries(themes.map((t) => [t.id, t.name]));
+const years = [...new Set(pubs.map((p) => String(p.year)))];
+---
+
+<section class="filters js-only" aria-label="Filter publications" data-pub-filters>
+  <div class="field grow">
+    <label for="pub-q" class="label">
+      Search titles
+    </label>
+    <input id="pub-q" type="search" placeholder="e.g. continual" autocomplete="off" data-f="q" />
+  </div>
+  <div class="field">
+    <label for="pub-member" class="label">
+      Lab member
+    </label>
+    <select id="pub-member" data-f="member">
+      <option value="">Everyone</option>
+      {members.map((m) => (
+        <option value={m.id}>{titledName(m.data)}</option>
+      ))}
+    </select>
+  </div>
+  <div class="field year">
+    <label for="pub-year" class="label">
+      Year
+    </label>
+    <select id="pub-year" data-f="year">
+      <option value="">All years</option>
+      {years.map((y) => (
+        <option value={y}>{y}</option>
+      ))}
+    </select>
+  </div>
+  <div class="field full" role="group" aria-labelledby="pub-theme-label">
+    <span class="label" id="pub-theme-label">
+      Theme
+    </span>
+    <div class="chips">
+      <button type="button" class="fchip" data-theme="" aria-pressed="true">
+        All themes
+      </button>
+      {themes.map((t) => (
+        <button type="button" class="fchip" data-theme={t.id} aria-pressed="false">
+          {t.name}
+        </button>
+      ))}
+    </div>
+  </div>
+  <script type="application/json" data-names set:html={JSON.stringify({ names, themeNames })} />
+</section>
+
+<script>
+  import {
+    readPubFilter,
+    writePubFilter,
+    pubMatches,
+    pubFilterLabel,
+    emptyPubFilter,
+    bibExport,
+    type PubFilter,
+  } from '../lib/filters';
+  import { animateChange, transitionName } from '../lib/motion';
+
+  const card = document.querySelector<HTMLElement>('[data-pub-filters]');
+  const status = document.getElementById('pub-status');
+  const empty = document.getElementById('pub-empty');
+  if (card && status) {
+    const { names, themeNames } = JSON.parse(card.querySelector('[data-names]')!.textContent!);
+    const q = card.querySelector<HTMLInputElement>('[data-f="q"]')!;
+    const member = card.querySelector<HTMLSelectElement>('[data-f="member"]')!;
+    const year = card.querySelector<HTMLSelectElement>('[data-f="year"]')!;
+    const bib = document.querySelector<HTMLAnchorElement>('[data-bib-export]');
+    const bibLabel = bib?.querySelector<HTMLElement>('[data-bib-label]');
+    const allHref = bib?.getAttribute('href') ?? '';
+    let blobUrl = '';
+    const chips = [...card.querySelectorAll<HTMLButtonElement>('[data-theme]')];
+    const items = [...document.querySelectorAll<HTMLElement>('.pub[data-title]')];
+    const groups = [...document.querySelectorAll<HTMLElement>('[data-year-group]')];
+    let f: PubFilter = readPubFilter(location.search);
+    if (f.member && !(f.member in names)) f.member = '';
+    if (f.theme && !(f.theme in themeNames)) f.theme = '';
+    if (f.year && ![...year.options].some((o) => o.value === f.year)) f.year = '';
+
+    // the BibTeX button: every entry without a filter, the entries shown with one, and not
+    // available when nothing is shown
+    const updateBib = (shown: HTMLElement[], label: string) => {
+      if (!bib || !bibLabel) return;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      blobUrl = '';
+      const filtered = items.some((el) => el.hidden);
+      bibLabel.textContent = filtered ? 'Download these as BibTeX' : 'Download all as BibTeX';
+      if (!shown.length) {
+        bib.removeAttribute('href');
+        bib.setAttribute('aria-disabled', 'true');
+        return;
+      }
+      bib.removeAttribute('aria-disabled');
+      if (!filtered) {
+        bib.href = allHref;
+        return;
+      }
+      const entries = shown.map((el) => el.querySelector('.bibtex code')?.textContent ?? '');
+      blobUrl = URL.createObjectURL(
+        new Blob([bibExport(entries, label)], { type: 'application/x-bibtex;charset=utf-8' }),
+      );
+      bib.href = blobUrl;
+    };
+
+    const apply = (push = true) => {
+      q.value = f.q;
+      member.value = f.member;
+      year.value = f.year;
+      for (const c of chips) c.setAttribute('aria-pressed', String(c.dataset.theme === f.theme));
+      for (const el of items) {
+        el.hidden = !pubMatches(
+          {
+            title: el.dataset.title ?? '',
+            themes: (el.dataset.themes ?? '').split(' ').filter(Boolean),
+            members: (el.dataset.members ?? '').split(' ').filter(Boolean),
+            year: Number(el.dataset.year),
+          },
+          f,
+        );
+      }
+      for (const g of groups) g.hidden = !g.querySelector('.pub:not([hidden])');
+      const shown = items.filter((el) => !el.hidden);
+      const none = shown.length === 0;
+      const label = pubFilterLabel(
+        f,
+        (id) => themeNames[id],
+        (id) => names[id],
+      );
+      status.textContent = none ? 'No publications match these filters.' : label;
+      updateBib(shown, label);
+      if (empty) empty.hidden = !none;
+      if (push) history.replaceState(null, '', writePubFilter(new URL(location.href), f));
+    };
+
+    // Choosing a theme, member or year animates the list (src/lib/motion.ts): entries that stay
+    // slide to their new place, the others fade out or in. Typing in the search field filters at
+    // once, since the page cannot show typed letters while a transition runs.
+    const named = (): [HTMLElement, string][] => [
+      ...items.map((el): [HTMLElement, string] => [el, transitionName('pub', el.id)]),
+      ...groups.map((g, i): [HTMLElement, string] => [g, transitionName('year', String(i))]),
+    ];
+    const applyAnimated = () => animateChange(() => apply(), named);
+
+    q.addEventListener('input', () => {
+      f = { ...f, q: q.value };
+      apply();
+    });
+    member.addEventListener('change', () => {
+      f = { ...f, member: member.value };
+      applyAnimated();
+    });
+    year.addEventListener('change', () => {
+      f = { ...f, year: year.value };
+      applyAnimated();
+    });
+    for (const c of chips)
+      c.addEventListener('click', () => {
+        f = { ...f, theme: c.dataset.theme ?? '' };
+        applyAnimated();
+      });
+    document.querySelector('[data-pub-reset]')?.addEventListener('click', () => {
+      f = { ...emptyPubFilter };
+      applyAnimated();
+      q.focus();
+    });
+    apply(false);
+  }
+</script>
+
+<style>
+  .filters {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 32px;
+    align-items: flex-end;
+  }
+  .field {
+    flex: 1 1 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .grow {
+    flex: 1 1 280px;
+  }
+  .year {
+    flex: 0 1 160px;
+  }
+  .full {
+    flex: 999 1 100%;
+  }
+  /* one fixed height, so the search box and the member menu line up */
+  input,
+  select {
+    height: 48px;
+    padding: 0 16px;
+    line-height: 1.2;
+    border-radius: 12px;
+    border: 1px solid var(--teal-300);
+    background: var(--teal-100);
+    color: var(--ink);
+  }
+  input::placeholder {
+    color: var(--muted);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .fchip {
+    font-weight: 600;
+    font-size: 15px;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    color: var(--ink);
+    border: 1px solid var(--teal-300);
+    cursor: pointer;
+  }
+  .fchip:hover {
+    border-color: var(--teal-500);
+  }
+  .fchip[aria-pressed='true'] {
+    background: var(--teal-700);
+    border-color: var(--teal-700);
+    color: var(--white);
+  }
+</style>

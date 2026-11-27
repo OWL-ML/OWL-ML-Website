@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Button from '../components/Button.astro';
+import { nav } from '../lib/nav';
+---
+
+<BaseLayout title="Page not found" noindex>
+  <section class="band" slot="band">
+    <div class="container inner">
+      <div class="text">
+        <p class="eyebrow">404 · A novel point</p>
+        <h1>This page is not part of our known world.</h1>
+        <p class="lead">
+          The address may be mistyped, or the page moved when the site was rebuilt. These might
+          help:
+        </p>
+        <div class="actions">
+          <Button href="/">Go to the homepage</Button>
+          <Button href="/publications/" variant="on-dark">
+            Publications
+          </Button>
+        </div>
+      </div>
+      <img src="/brand/owl.svg" alt="" width="230" height="320" class="owl" />
+    </div>
+  </section>
+  <div class="container more">
+    <h2>Main sections</h2>
+    <ul>
+      {nav.map((n) => (
+        <li>
+          <a href={n.href}>{n.label}</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .band {
+    background: var(--teal-700);
+    color: var(--on-dark);
+  }
+  .inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    padding-block: 56px 72px;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 680px;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--peach-light);
+  }
+  h1 {
+    color: var(--white);
+    font-size: clamp(34px, 4.6vw, 52px);
+  }
+  .lead {
+    font-size: 19px;
+    color: var(--on-dark-muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .band :global(a:focus-visible) {
+    outline-color: var(--peach-light);
+  }
+  .owl {
+    height: 160px;
+    width: auto;
+    flex: none;
+  }
+  .more {
+    padding-block: 48px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .more h2 {
+    font-size: 28px;
+  }
+  .more ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+    font-weight: 600;
+  }
+  @media (max-width: 720px) {
+    .inner {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      padding-block: 32px 48px;
+    }
+    .owl {
+      height: 90px;
+    }
+  }
+</style>

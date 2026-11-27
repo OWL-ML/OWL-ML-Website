@@ -1,0 +1,329 @@
+---
+import AwardBadge from '../AwardBadge.astro';
+import PersonAvatar from '../PersonAvatar.astro';
+import Icon from '../Icon.astro';
+import Teaser from './Teaser.astro';
+import NewsMore from './NewsMore.astro';
+import { subjectLink, hasBody, typeLabel, isClosed, type NewsEntry } from '../../lib/news';
+import { formatDate } from '../../lib/format';
+import { getCollection } from 'astro:content';
+import { getPublications } from '../../lib/data';
+import { photoFor } from '../../lib/photos';
+import { paperImage } from '../../lib/paper-images';
+import { plainParagraphs } from '../../lib/plain-text';
+
+// A tile in the "latest" bento grid; its shape follows the news type (docs/DESIGN.md). Paper
+// tiles carry the paper's figure on top (beside the text in the large tile). Its text
+// opens in place ("Read more"); the tile carries the id that /news/#<id> links point to.
+interface Props {
+  item: NewsEntry;
+  large?: boolean;
+}
+const { item, large = false } = Astro.props;
+const d = item.data;
+const pub = d.paper ? (await getPublications()).find((p) => p.key === d.paper) : undefined;
+const everyone = await getCollection('people');
+const people = await Promise.all(
+  d.people.map(async (id) => {
+    const p = everyone.find((x) => x.id === id);
+    return { id, name: p?.data.name ?? id, photo: await photoFor(p?.data.photo) };
+  }),
+);
+const teaser = await paperImage(pub?.thumbnail);
+// a wide figure (e.g. a timeline) goes above the text of the large tile instead of beside it
+const wideFigure = !!teaser && teaser.width / teaser.height > 2;
+const target = subjectLink(item);
+const isPaper = d.type === 'paper' || d.type === 'award';
+const kind = d.type === 'funding' ? 'dark' : d.type === 'opportunity' ? 'peach' : 'light';
+const meta = [formatDate(d.date), typeLabel[d.type], d.type === 'award' ? pub?.venue_short : null]
+  .filter(Boolean)
+  .join(' · ');
+const linkLabel = target && (isPaper && target.label === 'Paper' ? 'Read the paper' : target.label);
+// Tiles without a figure show the beginning of their text in the room the row leaves them
+// (Martin, November 2026); "Read more" opens the full text, which then replaces the preview.
+// Plain text, hidden from screen readers: they read the full text in "Read more".
+const preview = !isPaper && hasBody(item) ? plainParagraphs(item.body ?? '') : [];
+---
+
+<article
+  class:list={[
+    'tile',
+    `tile-${kind}`,
+    large && 'large',
+    large && wideFigure && 'wide-figure',
+    isPaper && !large && 'paper-top',
+  ]}
+  data-type={d.type}
+  id={item.id}
+>
+  {isPaper && (
+    <div class="figure">
+      <Teaser seed={pub?.title ?? d.title} image={teaser} />
+    </div>
+  )}
+  <div class="body">
+    {d.type === 'people' && (
+      <div class="avatars" aria-hidden="true">
+        {people.length ? (
+          people.map((p) => <PersonAvatar name={p.name} photo={p.photo} size={44} />)
+        ) : (
+          <span class="icon-circle peach">
+            <Icon name="person" />
+          </span>
+        )}
+      </div>
+    )}
+    {d.type === 'funding' && (
+      <span class="big-icon">
+        <Icon name="funding" size={28} />
+      </span>
+    )}
+    {d.type === 'opportunity' && (
+      <span class="big-icon">
+        <Icon name="megaphone" size={28} />
+      </span>
+    )}
+    {isPaper && large && pub?.award && <AwardBadge class="badge">{pub.award}</AwardBadge>}
+    {isPaper && !large && pub && (pub.award || pub.venue_short) && (
+      <span class="chip-venue">{[pub.award, pub.venue_short].filter(Boolean).join(' · ')}</span>
+    )}
+    <p class="meta">{meta}</p>
+    <h3 class:list={[(large || kind === 'dark') && 'display']}>
+      {large && pub ? pub.title : d.title}
+    </h3>
+    {isClosed(item) && <span class="closed">Closed · deadline was {formatDate(d.deadline!)}</span>}
+    {preview.length > 0 && (
+      <div class="preview" aria-hidden="true">
+        {preview.map((p) => (
+          <p>{p}</p>
+        ))}
+      </div>
+    )}
+    {target && (
+      <a class="go" href={target.href}>
+        {linkLabel} →<span class="sr-only">: {d.title}</span>
+      </a>
+    )}
+    {hasBody(item) && <NewsMore item={item} />}
+  </div>
+</article>
+
+<style>
+  .tile {
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .tile-light {
+    background: var(--white);
+  }
+  .tile-dark {
+    background: var(--teal-700);
+    color: var(--white);
+  }
+  .tile-peach {
+    background: var(--peach-100);
+    color: var(--on-peach);
+  }
+  /* the newest item: highlighted by a tint rather than by size; a figure sits beside the text */
+  .large.tile-light {
+    background: var(--teal-200);
+  }
+  .large.tile-light .go,
+  .large.tile-light :global(.more summary),
+  .large.tile-light :global(.more a) {
+    color: var(--teal-800);
+  }
+  .large.tile-light .meta {
+    color: var(--teal-800);
+  }
+  .large:has(.figure) {
+    flex-direction: row;
+  }
+  .large .figure {
+    flex: 0 0 42%;
+    padding: 16px 0 16px 16px;
+    display: flex;
+  }
+  .large .figure :global(.teaser.wide) {
+    flex: 1;
+    height: auto;
+    min-height: 200px;
+    border-radius: 14px;
+  }
+  .large.wide-figure:has(.figure) {
+    flex-direction: column;
+  }
+  .large.wide-figure .figure {
+    padding: 16px 16px 0;
+  }
+  .large.wide-figure .figure :global(.teaser.wide) {
+    min-height: 0;
+  }
+  /* other paper tiles: the figure on top, so the text (and "Read more") has the tile's width */
+  .paper-top .figure {
+    padding: 16px 16px 0;
+    display: flex;
+  }
+  .paper-top .figure :global(.teaser.wide) {
+    flex: 1;
+    height: 150px;
+    border-radius: 14px;
+  }
+  .body :global(.badge) {
+    align-self: flex-start;
+  }
+  .body {
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .avatars {
+    display: flex;
+  }
+  .avatars :global(.avatar + .avatar) {
+    margin-left: -8px;
+  }
+  .icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .peach {
+    background: var(--peach-200);
+    color: var(--orange-ink);
+  }
+  .big-icon {
+    color: var(--peach-light);
+  }
+  .tile-peach .big-icon {
+    color: var(--orange-ink);
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .tile-dark .meta {
+    color: var(--on-dark-subtle);
+  }
+  .tile-peach .meta {
+    color: var(--on-peach-muted);
+  }
+  h3 {
+    font-family: var(--font-body);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  h3.display {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .large h3.display {
+    font-size: clamp(24px, 2.4vw, 30px);
+  }
+  .chip-venue {
+    align-self: flex-start;
+    background: var(--teal-200);
+    color: var(--teal-800);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+  }
+  .closed {
+    align-self: flex-start;
+    font-size: 13px;
+    background: var(--white);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+  }
+  /* the preview takes the room the row leaves (flex-basis 0, so it never makes a tile taller
+     than its row needs, but shows at least three lines) and fades out at the bottom */
+  .preview {
+    flex: 1 1 0;
+    min-height: calc(3 * var(--line-body) * 1em);
+    overflow: hidden;
+    font-size: 15px;
+    line-height: var(--line-body);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 3em), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 3em), transparent);
+  }
+  .preview p + p {
+    margin-top: 0.8em;
+  }
+  /* opened: the preview folds away while the full text slides open below "Read more" (kept
+     while the grid measures closed heights); browsers without transitions switch at once */
+  .preview {
+    transition:
+      flex-grow 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      min-height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      max-height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.2s ease-out;
+  }
+  .tile:has(:global(details.more[open])):not(:global(.measuring)) .preview {
+    flex-grow: 0;
+    min-height: 0;
+    opacity: 0;
+  }
+  .go {
+    margin-top: auto;
+    padding-top: 4px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .go:hover {
+    text-decoration: underline;
+  }
+  .tile {
+    scroll-margin-top: 24px;
+  }
+  .tile-dark .go,
+  .tile.tile-dark :global(.more summary),
+  .tile.tile-dark :global(.more a) {
+    color: var(--peach-light);
+  }
+  .tile.tile-dark :global(.more a:focus-visible),
+  .tile.tile-dark :global(.more summary:focus-visible) {
+    outline-color: var(--peach-light);
+  }
+  .tile.tile-peach :global(.more summary),
+  .tile.tile-peach :global(.more a) {
+    color: var(--orange-ink);
+  }
+  .tile-dark .go:focus-visible {
+    outline-color: var(--peach-light);
+  }
+  .tile-peach .go {
+    color: var(--orange-ink);
+  }
+  @media (max-width: 900px) {
+    /* stacked tiles have no row to fill: show the first few lines */
+    .preview {
+      flex: none;
+      max-height: calc(5 * var(--line-body) * 1em);
+    }
+    .tile:has(:global(details.more[open])):not(:global(.measuring)) .preview {
+      max-height: 0;
+    }
+    .large:has(.figure) {
+      flex-direction: column;
+    }
+    .large .figure {
+      padding: 16px 16px 0;
+    }
+    .large .figure :global(.teaser.wide) {
+      min-height: 180px;
+    }
+  }
+</style>

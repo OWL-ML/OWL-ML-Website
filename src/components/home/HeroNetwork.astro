@@ -1,0 +1,133 @@
+---
+import { WIDTH, HEIGHT } from './network-loop';
+
+// The hero figure (network-loop.ts): an open-world dot field feeds a network that grows and shrinks;
+// its predictions widen while it is uncertain. The static frame (/hero-network.svg, built from the
+// same code) shows first and stays under prefers-reduced-motion and without JavaScript; otherwise a
+// canvas animates the 8-second loop on top of it, starting from that frame, and pauses while
+// off-screen. Decorative: screen readers get the one-sentence description instead.
+interface Props {
+  description: string;
+}
+const { description } = Astro.props;
+---
+
+<figure class="card" data-hero-network>
+  <div class="art" aria-hidden="true">
+    <img
+      src="/hero-network.svg"
+      alt=""
+      width={WIDTH}
+      height={HEIGHT}
+      class="still"
+      fetchpriority="high"
+      data-still
+    />
+    <canvas class="live" hidden data-live></canvas>
+  </div>
+  <img src="/brand/owl.svg" alt="" width="230" height="320" class="owl" />
+  <figcaption class="sr-only">{description}</figcaption>
+</figure>
+
+<script>
+  import { frame, drawCanvas, LOOP_SECONDS, STILL_T, WIDTH, HEIGHT } from './network-loop';
+
+  const root = document.querySelector<HTMLElement>('[data-hero-network]');
+  const canvas = root?.querySelector<HTMLCanvasElement>('[data-live]');
+  const still = root?.querySelector<HTMLImageElement>('[data-still]');
+  const ctx = canvas?.getContext('2d');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (root && canvas && still && ctx) {
+    const FRAME_MS = 1000 / 30; // 30 frames per second are plenty for this motion
+    let t = STILL_T; // loop time; starts at the static frame, so nothing jumps
+    let visible = true;
+    let raf = 0;
+    let last = 0;
+
+    const size = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.round(still.clientWidth * dpr);
+      canvas.width = w;
+      canvas.height = Math.round((w * HEIGHT) / WIDTH);
+    };
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      if (now - last < FRAME_MS) return;
+      if (last) t = (t + (now - last) / 1000 / LOOP_SECONDS) % 1;
+      last = now;
+      drawCanvas(ctx, frame(t));
+      if (canvas.hidden) {
+        canvas.hidden = false;
+        still.style.visibility = 'hidden';
+      }
+    };
+    const update = () => {
+      const run = visible && !document.hidden && !reduce.matches;
+      if (run && !raf) {
+        last = 0;
+        raf = requestAnimationFrame(tick);
+      } else if (!run && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+      if (reduce.matches) {
+        canvas.hidden = true;
+        still.style.visibility = '';
+      }
+    };
+
+    size();
+    new ResizeObserver(size).observe(still);
+    if ('IntersectionObserver' in window)
+      new IntersectionObserver(([entry]) => {
+        visible = !!entry?.isIntersecting;
+        update();
+      }).observe(root);
+    document.addEventListener('visibilitychange', update);
+    reduce.addEventListener('change', update);
+    update();
+  }
+</script>
+
+<style>
+  .card {
+    position: relative;
+    margin: 0;
+    background: var(--teal-750);
+    border: 1px solid var(--teal-line-dark);
+    border-radius: var(--radius-card);
+    padding: 18px 96px 18px 18px;
+  }
+  .art {
+    position: relative;
+  }
+  .still {
+    width: 100%;
+    height: auto;
+  }
+  .live {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  /* the owl watches from the corner (its orange body carries the black strokes on dark teal) */
+  .owl {
+    position: absolute;
+    right: 16px;
+    bottom: 0;
+    width: auto;
+    height: 108px;
+  }
+  @media (max-width: 720px) {
+    .card {
+      padding: 8px 44px 8px 8px;
+      border-radius: 16px;
+    }
+    .owl {
+      right: 8px;
+      height: 56px;
+    }
+  }
+</style>

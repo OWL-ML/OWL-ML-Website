@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/home/Hero.astro';
+import Pillars from '../components/home/Pillars.astro';
+import ThemeOverview from '../components/home/ThemeOverview.astro';
+import ResearchMap from '../components/home/ResearchMap.astro';
+import Highlights from '../components/home/Highlights.astro';
+import LatestNews from '../components/home/LatestNews.astro';
+import Projects from '../components/home/Projects.astro';
+import TeamCard from '../components/TeamCard.astro';
+import JoinBand from '../components/JoinBand.astro';
+import { site } from '../lib/site';
+import { getPeople } from '../lib/data';
+
+const team = await getPeople('current');
+---
+
+<BaseLayout current="home">
+  <Hero slot="band" />
+  <Pillars />
+
+  <section class="container section" id="research" aria-labelledby="research-h">
+    <div class="section-intro">
+      <h2 id="research-h">Lifelong ML needs many perspectives</h2>
+      <p class="story">
+        {site.story} <span class="js-only">{site.story_map}</span>
+      </p>
+    </div>
+    <ResearchMap />
+    <div class="no-js-only">
+      <ThemeOverview />
+    </div>
+  </section>
+
+  <section class="container section" aria-labelledby="team-h">
+    <div class="section-head">
+      <h2 id="team-h">The team</h2>
+      <a class="more-link" href="/people/">
+        Meet everyone →
+      </a>
+    </div>
+    <ul class="team">
+      {team.map((p) => (
+        <li>
+          <TeamCard person={p} />
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <Projects />
+
+  <section class="container section two-col" aria-label="Highlights and news">
+    <Highlights />
+    <LatestNews />
+  </section>
+
+  <div class="container join-wrap">
+    <JoinBand
+      title="Looking for a thesis?"
+      text="We shape each Bachelor's or Master's thesis together with you. See our themes, past theses and how to reach out."
+      cta="Get in touch about a thesis"
+      href="/theses/"
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .story {
+    font-size: 19px;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+  .team {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(190px, 1fr)
+    ); /* five per row at full width, as on People */
+    gap: 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .join-wrap {
+    padding-block: 32px 88px;
+  }
+  @media (max-width: 900px) {
+    .two-col {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 720px) {
+    .story {
+      font-size: 17px;
+    }
+    .team {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .join-wrap {
+      padding-block: 16px 48px;
+    }
+  }
+</style>

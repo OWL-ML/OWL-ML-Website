@@ -1,0 +1,149 @@
+/* Training footprint. Layout and colours follow the agreed prototype, with design tokens. */
+.fp {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+.fp-inputs {
+  flex: 3 1 420px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.fp-result {
+  flex: 2 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fp-group,
+.fp-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fp-label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--body);
+}
+.fp-unit {
+  font-weight: 400;
+}
+.fp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fp-slider-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fp-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.fp-slider input {
+  width: 100%;
+  accent-color: var(--teal-600);
+}
+.fp-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.fp-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.fp-tile {
+  flex: 1 1 180px;
+  background: var(--teal-50);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fp-tile span {
+  font-size: 14px;
+  color: var(--body);
+}
+.fp-tile strong {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.1;
+}
+.fp-tile-co2 {
+  background: var(--peach-100);
+  color: var(--on-peach);
+}
+.fp-tile-co2 span {
+  color: var(--on-peach-muted);
+}
+.fp-formula {
+  margin: 0;
+  background: var(--teal-50);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--body);
+}
+.fp-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fp-bars {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fp-bar {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--body);
+}
+.fp-current {
+  font-weight: 600;
+  color: var(--ink);
+}
+.fp-track {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline);
+}
+.fp-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: #9fd0c4;
+}
+.fp-current .fp-fill {
+  background: var(--orange);
+}
+.fp-bar-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: right;
+}
+@media (max-width: 720px) {
+  .fp-bar {
+    grid-template-columns: 110px minmax(0, 1fr) 60px;
+  }
+  .fp-tile strong {
+    font-size: 26px;
+  }
+}

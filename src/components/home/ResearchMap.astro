@@ -1,0 +1,637 @@
+---
+import { getThemes } from '../../lib/themes';
+import { getPeople, getPublications } from '../../lib/data';
+import { titledName } from '../../lib/format';
+import { layout, renderSvg, renderPanel, renderPaperBox, type PanelText } from '../../lib/map';
+
+// The research map (desktop) / theme explorer (phone). Laid out at build time from the data;
+// selection works through real buttons above the map (clicking nodes is a shortcut for mouse
+// users). Without JavaScript the page shows the theme overview instead (see index.astro).
+const themes = (await getThemes()).map((t) => ({
+  id: t.id,
+  name: t.name,
+  short: t.short,
+  oneliner: t.oneliner,
+  description: t.description,
+  x: t.map.x,
+}));
+const people = (await getPeople('current')).map((p) => ({
+  id: p.id,
+  name: p.data.name,
+  titled: titledName(p.data),
+  role: p.data.role,
+  themes: p.data.themes,
+}));
+const papers = (await getPublications()).map((p) => ({
+  key: p.key,
+  title: p.title,
+  venue: p.venue_short,
+  year: p.year,
+  themes: p.themes,
+  members: p.members,
+  featured: p.featured,
+}));
+const data = layout(themes, people, papers);
+// people chips: the lab head first, then everyone else alphabetically by surname (person id)
+const lead = new Set(
+  (await getPeople('current')).filter((p) => p.data.group === 'lead').map((p) => p.id),
+);
+const chipPeople = [...data.people].sort(
+  (a, b) => Number(lead.has(b.id)) - Number(lead.has(a.id)) || a.id.localeCompare(b.id, 'en'),
+);
+const text: PanelText = {
+  overviewTitle: 'Perspectives on lifelong learning',
+  overviewText:
+    'Each theme is one perspective on lifelong learning. Pick a theme or a person to see how they connect.',
+  personText:
+    'Works across the themes highlighted in the map. Their profile page lists every paper and talk tagged with their name.',
+  paperHint:
+    'Point at a paper in the map, or reach it with the Tab key, to see its full title. Click it to open it.',
+};
+---
+
+<div class="map-card js-only" data-map>
+  <div class="chips-rows">
+    <div class="chip-row" role="group" aria-labelledby="map-themes-label">
+      <span class="row-label" id="map-themes-label">
+        Themes
+      </span>
+      <div class="scroller">
+        <button type="button" class="mchip desktop-only" data-select="" aria-pressed="true">
+          All
+        </button>
+        {data.themes.map((t) => (
+          <button type="button" class="mchip" data-select={`theme:${t.id}`} aria-pressed="false">
+            {t.short}
+          </button>
+        ))}
+      </div>
+    </div>
+    <div class="chip-row" role="group" aria-labelledby="map-people-label">
+      <span class="row-label" id="map-people-label">
+        People
+      </span>
+      <div class="scroller">
+        {chipPeople.map((p) => (
+          <button type="button" class="mchip" data-select={`person:${p.id}`} aria-pressed="false">
+            {p.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+  <div class="map-body">
+    <div class="graph">
+      <svg
+        viewBox={`0 0 ${data.width} ${data.height}`}
+        role="group"
+        aria-label="Network linking the research themes with lab members and papers. Use the buttons above to explore it; the panel describes the selection, and each paper is a link."
+        data-map-svg
+        set:html={renderSvg(data, null)}
+      />
+      <ul class="legend" aria-hidden="true">
+        <li>
+          <span class="lg lg-theme"></span>Theme
+        </li>
+        <li>
+          <span class="lg lg-person"></span>Person
+        </li>
+        <li>
+          <span class="lg lg-paper"></span>Paper
+        </li>
+      </ul>
+    </div>
+    <div class="side">
+      <aside
+        class="panel"
+        aria-live="polite"
+        data-map-panel
+        set:html={renderPanel(data, null, text)}
+      />
+      <div
+        class="paper-box"
+        aria-live="polite"
+        data-paper-box
+        set:html={renderPaperBox(data, null, text.paperHint)}
+      />
+    </div>
+  </div>
+  <script type="application/json" data-map-data set:html={JSON.stringify({ data, text })} />
+</div>
+
+<script>
+  import {
+    renderSvg,
+    renderPanel,
+    renderPaperBox,
+    selectionFromSearch,
+    type MapData,
+    type PanelText,
+    type Selection,
+  } from '../../lib/map';
+
+  const root = document.querySelector<HTMLElement>('[data-map]');
+  const raw = root?.querySelector('[data-map-data]')?.textContent;
+  if (root && raw) {
+    const { data, text } = JSON.parse(raw) as { data: MapData; text: PanelText };
+    const svg = root.querySelector<SVGSVGElement>('[data-map-svg]')!;
+    const panel = root.querySelector<HTMLElement>('[data-map-panel]')!;
+    const paperBox = root.querySelector<HTMLElement>('[data-paper-box]')!;
+    // the box keeps the last paper pointed at or focused, so its link can be reached
+    let shownPaper: string | null = null;
+    const showPaper = (paperKey: string | null) => {
+      if (paperKey === shownPaper) return;
+      shownPaper = paperKey;
+      paperBox.innerHTML = renderPaperBox(data, paperKey, text.paperHint);
+      paperBox.classList.toggle('active', !!paperKey);
+    };
+    const chips = [...root.querySelectorAll<HTMLButtonElement>('button[data-select]')];
+    const phone = window.matchMedia('(max-width: 720px)');
+
+    const parse = (v: string | undefined): Selection => {
+      if (!v) return null;
+      const [kind, id] = v.split(':');
+      return kind === 'theme' || kind === 'person' ? { kind, id: id! } : null;
+    };
+    const key = (s: Selection) => (s ? `${s.kind}:${s.id}` : '');
+
+    // A new selection updates the drawing in place instead of replacing it, so the browser
+    // animates the change (CSS transitions below; Martin, November 2026): elements are matched
+    // by their data-key; matched ones take the new attributes (papers glide, edges follow,
+    // highlights fade), new ones fade in (@starting-style), leaving ones fade out.
+    const syncAttrs = (el: Element, next: Element) => {
+      for (const a of [...el.attributes])
+        if (!next.hasAttribute(a.name)) el.removeAttribute(a.name);
+      for (const a of [...next.attributes])
+        if (el.getAttribute(a.name) !== a.value) el.setAttribute(a.name, a.value);
+      [...next.children].forEach((c, i) => el.children[i] && syncAttrs(el.children[i]!, c));
+    };
+    const morph = (markup: string) => {
+      const next = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      next.innerHTML = markup;
+      for (const group of ['edges', 'nodes']) {
+        const here = svg.querySelector(`:scope > g.${group}`);
+        const there = next.querySelector(`:scope > g.${group}`);
+        if (!here || !there) {
+          svg.innerHTML = markup;
+          return;
+        }
+        const old = new Map<string, Element>();
+        for (const el of [...here.children]) {
+          if (el.classList.contains('leaving')) el.remove();
+          else old.set(el.getAttribute('data-key') ?? '', el);
+        }
+        for (const el of [...there.children]) {
+          const k = el.getAttribute('data-key') ?? '';
+          const match = old.get(k);
+          if (match) {
+            syncAttrs(match, el);
+            old.delete(k);
+          } else here.append(el);
+        }
+        for (const el of old.values()) {
+          if (!motion()) {
+            el.remove(); // nothing to fade under reduced motion
+            continue;
+          }
+          el.classList.add('leaving');
+          el.removeAttribute('href'); // out of the tab order while it fades
+          el.setAttribute('aria-hidden', 'true');
+          setTimeout(() => el.remove(), 450);
+        }
+      }
+    };
+    const motion = () => !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let current: Selection = null;
+    let drawn = false;
+    const show = (sel: Selection, updateUrl = true) => {
+      // on phones there is no "All" view: the explorer always shows one theme or person
+      if (!sel && phone.matches) sel = { kind: 'theme', id: data.themes[0]!.id };
+      current = sel;
+      // the first drawing (page load) appears as it is; later selections are animated
+      const animated = drawn;
+      if (animated) morph(renderSvg(data, sel));
+      else {
+        svg.innerHTML = renderSvg(data, sel);
+        requestAnimationFrame(() => svg.classList.add('animated')); // new nodes fade in from now
+      }
+      drawn = true;
+      panel.innerHTML = renderPanel(data, sel, text);
+      if (animated && motion())
+        panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
+      showPaper(null);
+      for (const c of chips) c.setAttribute('aria-pressed', String(c.dataset.select === key(sel)));
+      if (updateUrl) {
+        const url = new URL(location.href);
+        url.searchParams.delete('theme');
+        url.searchParams.delete('person');
+        if (sel) url.searchParams.set(sel.kind, sel.id);
+        history.replaceState(null, '', url);
+      }
+    };
+
+    for (const c of chips) {
+      c.addEventListener('click', () => {
+        const sel = parse(c.dataset.select);
+        // pressing the selected chip again returns to the overview
+        show(key(sel) === key(current) ? null : sel);
+      });
+    }
+    // clicking a theme or person node in the graph does the same as its button
+    svg.addEventListener('click', (e) => {
+      const node = (e.target as Element).closest<SVGGElement>('[data-select]');
+      if (node) show(parse(node.dataset.select));
+    });
+    // pointing at or focusing a paper shows its full title in the paper box
+    const paperAt = (e: Event) =>
+      (e.target as Element).closest<SVGAElement>('a[data-paper]')?.dataset.paper;
+    svg.addEventListener('mouseover', (e) => {
+      const k = paperAt(e);
+      if (k) showPaper(k);
+    });
+    svg.addEventListener('focusin', (e) => {
+      const k = paperAt(e);
+      if (k) showPaper(k);
+    });
+    phone.addEventListener('change', () => show(current, false));
+    show(selectionFromSearch(location.search, data), false);
+  }
+</script>
+
+<style>
+  .map-card {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .chips-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+  }
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .scroller {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .row-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--body);
+    margin-right: 4px;
+  }
+  .mchip {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 9px 15px;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    color: var(--ink);
+    border: 1px solid var(--teal-300);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mchip:hover {
+    border-color: var(--teal-500);
+  }
+  .mchip[aria-pressed='true'] {
+    background: var(--teal-700);
+    border-color: var(--teal-700);
+    color: var(--white);
+  }
+  .map-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    align-items: stretch;
+  }
+  .graph {
+    flex: 3 1 560px;
+    min-width: 0;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+  }
+  /* right column: the panel takes the room its content needs, the paper box sits at the bottom */
+  .side {
+    flex: 1 1 280px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .paper-box {
+    margin-top: auto;
+    min-height: 96px; /* a two-line title, so the box keeps its size for most papers */
+    border-radius: 18px;
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    background: var(--white);
+    border: 1.5px dashed var(--teal-200);
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+  .paper-box.active {
+    background: var(--teal-700);
+    border-color: var(--teal-700);
+    color: var(--white);
+  }
+  .paper-box :global(.pb-title) {
+    font-weight: 600;
+  }
+  .paper-box :global(.pb-meta) {
+    font-size: 14px;
+  }
+  .paper-box :global(.pb-meta a) {
+    color: var(--peach-light);
+    font-weight: 600;
+  }
+  .panel {
+    background: var(--teal-50);
+    border-radius: 18px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .legend li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lg {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+  }
+  .lg-theme {
+    border-radius: 50%;
+    background: var(--teal-200);
+    border: 2px solid var(--teal-500);
+  }
+  .lg-person {
+    border-radius: 50%;
+    background: var(--teal-700);
+  }
+  .lg-paper {
+    border-radius: 3px;
+    border: 2px solid #a9d4c8;
+  }
+
+  /* SVG (rendered by src/lib/map.ts) */
+  svg :global(.edge) {
+    fill: none;
+    stroke: var(--teal-300);
+    stroke-width: 2;
+  }
+  /* animated changes of selection (see morph in the script); reduced motion stops them through
+     the site-wide rule in base.css */
+  svg :global(.edge) {
+    transition:
+      d 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+      stroke 0.4s ease,
+      opacity 0.4s ease;
+  }
+  svg :global(.paper) {
+    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  svg :global(.theme),
+  svg :global(.person),
+  svg :global(a[data-paper]) {
+    transition: opacity 0.4s ease;
+  }
+  svg :global(circle),
+  svg :global(rect),
+  svg :global(text) {
+    transition:
+      fill 0.3s ease,
+      stroke 0.3s ease;
+  }
+  @starting-style {
+    svg.animated :global(.edge),
+    svg.animated :global(a[data-paper]) {
+      opacity: 0;
+    }
+  }
+  svg :global(.leaving) {
+    opacity: 0;
+    pointer-events: none;
+  }
+  svg :global(.edge.hot) {
+    stroke: var(--teal-600);
+  }
+  svg :global(.edge.cold) {
+    stroke: #eef3f1;
+  }
+  svg :global(text) {
+    font-family: var(--font-body);
+    text-anchor: middle;
+    paint-order: stroke;
+    stroke: var(--white);
+    stroke-width: 6px;
+    stroke-linejoin: round;
+  }
+  /* sizes in viewBox units: the SVG is drawn at about 0.75 scale on desktop */
+  svg :global(.t-name) {
+    font-size: 20px;
+    font-weight: 600;
+    fill: var(--ink);
+  }
+  svg :global(.t-line) {
+    font-size: 17px;
+    font-style: italic;
+    fill: var(--muted);
+  }
+  svg :global(.p-name) {
+    font-size: 18px;
+    font-weight: 500;
+    fill: var(--ink);
+  }
+  svg :global(.x-name) {
+    font-size: 17px;
+    fill: var(--body);
+  }
+  svg :global(.theme circle) {
+    fill: var(--teal-200);
+    stroke: var(--teal-500);
+    stroke-width: 2.5;
+  }
+  svg :global(.theme.hot circle) {
+    fill: var(--orange);
+    stroke: var(--orange);
+  }
+  svg :global(.person circle) {
+    fill: var(--teal-700);
+  }
+  svg :global(.person.hot circle) {
+    fill: var(--orange);
+    stroke: var(--teal-700);
+    stroke-width: 2;
+  }
+  svg :global(.paper rect) {
+    fill: var(--white);
+    stroke: #a9d4c8;
+    stroke-width: 2;
+  }
+  svg :global(.paper.hot rect) {
+    stroke: var(--teal-600);
+  }
+  /* papers are links: filled square and underlined label on hover and keyboard focus */
+  svg :global(a[data-paper]) {
+    cursor: pointer;
+  }
+  svg :global(a[data-paper]:hover rect),
+  svg :global(a[data-paper]:focus-visible rect) {
+    fill: var(--teal-600);
+    stroke: var(--teal-700);
+  }
+  svg :global(a[data-paper]:hover .x-name),
+  svg :global(a[data-paper]:focus-visible .x-name) {
+    fill: var(--teal-700);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+  svg :global(a[data-paper]:focus-visible) {
+    outline: 3px solid var(--teal-600);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+  svg :global(.dim) {
+    opacity: 0.28;
+  }
+  svg :global([data-select]) {
+    cursor: pointer;
+  }
+
+  /* Panel (rendered by src/lib/map.ts) */
+  .panel :global(.mp-kind) {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--teal-600);
+  }
+  .panel :global(.mp-title) {
+    font-size: 26px;
+    line-height: 1.15;
+  }
+  /* a person's role, below their name */
+  .panel :global(.mp-role) {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--teal-600);
+    margin-top: -6px;
+  }
+  /* the list of recent papers is for phones only: on desktop the papers are links in the map */
+  .panel :global(.mp-papers) {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .panel :global(.mp-text) {
+    font-size: 16px;
+    color: var(--body);
+  }
+  .panel :global(.mp-h) {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .panel :global(.mp-list) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 15px;
+  }
+  .panel :global(.mp-pills) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .panel :global(.mp-pill) {
+    background: var(--white);
+    border: 1px solid var(--teal-200);
+    font-size: 13px;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+  }
+  .panel :global(a.mp-pill) {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .panel :global(a.mp-pill:hover) {
+    border-color: var(--teal-500);
+    text-decoration: underline;
+  }
+  .panel :global(.mp-more) {
+    font-weight: 600;
+    font-size: 15px;
+    margin-top: 4px;
+  }
+
+  /* Phone: no graph; scrollable theme chips and one card */
+  @media (max-width: 720px) {
+    .map-card {
+      padding: 0;
+      background: none;
+      gap: 14px;
+    }
+    .graph,
+    .desktop-only {
+      display: none;
+    }
+    .chip-row {
+      flex-wrap: nowrap;
+      width: 100%;
+    }
+    .row-label {
+      flex: none;
+    }
+    .scroller {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+    }
+    .panel {
+      background: var(--white);
+      border-radius: var(--radius-card);
+    }
+    .paper-box {
+      display: none;
+    }
+    .panel :global(.mp-papers) {
+      display: flex;
+    }
+  }
+</style>

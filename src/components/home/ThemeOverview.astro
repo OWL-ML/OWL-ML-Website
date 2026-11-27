@@ -1,0 +1,162 @@
+---
+import PersonAvatar from '../PersonAvatar.astro';
+import { getThemes } from '../../lib/themes';
+import { getPeople, getPublications } from '../../lib/data';
+import { photoFor } from '../../lib/photos';
+import { titledName } from '../../lib/format';
+
+// "Lifelong ML needs many perspectives" (formerly "How our work connects") without the interactive map (phase 5): one column per theme with its
+// one-liner, description, the members working on it and up to five of its most recent papers.
+// This is also what the map degrades to without JavaScript.
+const themes = await getThemes();
+const people = await getPeople('current');
+const pubs = await getPublications();
+const columns = await Promise.all(
+  themes.map(async (t) => ({
+    theme: t,
+    people: await Promise.all(
+      people
+        .filter((p) => p.data.themes.includes(t.id))
+        .map(async (p) => ({ p, photo: await photoFor(p.data.photo) })),
+    ),
+    papers: pubs.filter((p) => p.themes.includes(t.id)).slice(0, 5),
+  })),
+);
+---
+
+<div class="overview">
+  {columns.map(({ theme, people, papers }) => (
+    <section class="theme" aria-labelledby={`theme-${theme.id}`}>
+      <span class="node" aria-hidden="true" />
+      <h3 id={`theme-${theme.id}`}>{theme.name}</h3>
+      <p class="oneliner">{theme.oneliner}</p>
+      <p class="desc">{theme.description}</p>
+      {people.length > 0 && (
+        <div class="block">
+          <h4>People</h4>
+          <ul class="people">
+            {people.map(({ p, photo }) => (
+              <li>
+                <a href={`/people/${p.id}/`}>
+                  <PersonAvatar name={p.data.name} photo={photo} size={28} />
+                  {titledName(p.data)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {papers.length > 0 && (
+        <div class="block">
+          <h4>Recent papers</h4>
+          <ul class="papers">
+            {papers.map((p) => (
+              <li>
+                <a href={`/publications/#${p.key}`}>{p.title}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <a class="more-link all" href={`/publications/?theme=${theme.id}`}>
+        Publications in this theme →
+      </a>
+    </section>
+  ))}
+</div>
+
+<style>
+  .overview {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 28px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .theme {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 22px;
+    background: var(--teal-50);
+    border-radius: 18px;
+  }
+  .node {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--teal-200);
+    border: 2.5px solid var(--teal-500);
+  }
+  h3 {
+    font-size: 22px;
+  }
+  .oneliner {
+    font-style: italic;
+    color: var(--teal-600);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  .desc {
+    color: var(--body);
+    font-size: 15px;
+  }
+  .block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  h4 {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 15px;
+  }
+  .people a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .people a:hover {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
+  .papers a {
+    line-height: 1.4;
+  }
+  .all {
+    margin-top: auto;
+    padding-top: 6px;
+    font-size: 15px;
+  }
+  @media (max-width: 1100px) {
+    .overview {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 720px) {
+    .overview {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0;
+      background: none;
+      gap: 14px;
+    }
+    .theme {
+      background: var(--white);
+      border-radius: var(--radius-card);
+    }
+  }
+</style>

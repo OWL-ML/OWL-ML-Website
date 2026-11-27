@@ -1,0 +1,212 @@
+# Courses as stated by Martin (October 2026). Bracketed values are unknown and must be filled in.
+# Descriptions marked "draft" were written for the mockups and need Martin's review; the others
+# come from the old Teaching page (owl-ml.com/teaching, migrated October 2026).
+# language: teaching language as given on the old site (en | de).
+# degree: BSc | MSc | BSc / MSc, the short label in the course path; level: the longer text in
+# the course panel.
+# demo: id of the course's interactive demo (docs/DEMOS.md); centrepiece: what non-lecture
+# courses show instead (dimensions | showcase | theses).
+# semester: when the course is taught. Times, rooms and dates are not published here: they are on
+# Stud.IP (the build rejects an `offerings` field with them).
+- id: python
+  name: Python Block Course
+  kind: Block course
+  level: BSc
+  degree: BSc
+  language: de
+  semester: winter
+  stage: foundations
+  description: >-
+    Learn to read, understand and run Python programs, with the basics of data structures,
+    functions and array operations. The course also covers translating mathematical descriptions
+    into programs, first steps in visualization and data analysis, and a look at modern Python
+    libraries for data science, AI and machine learning.
+  next: [traki]
+  themes: []
+  demo: step-through-python
+- id: traki
+  name: "AI: Transforming Computer Science"   # English title only, like all courses (Martin)
+  kind: Lecture + Tutorial
+  level: BSc
+  degree: BSc
+  language: de
+  semester: winter
+  stage: foundations
+  description: >-
+    How AI is transforming computer science and neighboring disciplines, from the technical
+    foundations of recognizing patterns in images and text, to methods like gradient descent and
+    neural networks, alongside societal questions on fairness, transparency, data protection and
+    regulation in the EU AI Act.
+  next: [nai]
+  pairs: [python]            # taken before or alongside
+  themes: []
+  demo: next-word
+- id: dgm
+  name: Deep Generative Models
+  kind: Lecture + Tutorial
+  level: MSc
+  degree: MSc
+  language: en
+  semester: winter
+  stage: methods
+  description: >-
+    The course will span materials on why generative models are critical, independently of
+    whether the goal is to arrive at a decision or to generate data. We will cover the different
+    ways to design generative models and respective mathematical tools necessary for
+    understanding.
+  next: [sem-sustainability, guided, thesis]
+  pairs: [llml]              # the two alternate
+  themes: [gd]
+  demo: data-to-noise
+- id: llml
+  name: Lifelong Machine Learning
+  kind: Lecture + Tutorial
+  level: MSc
+  degree: MSc
+  language: en
+  semester: summer
+  stage: methods
+  description: >-
+    Whereas ML has traditionally concentrated on static pre-defined datasets and respective test
+    scenarios, recent advances also take into account an evolving world. The course traverses
+    the fundamentals of lifelong machine learning, spanning methodology of how to effectively
+    learn in the present, remember past knowledge, and anticipate unknown future contexts and
+    situations.
+  next: [sem-lifelong, guided, thesis]
+  themes: [cl, mc]
+  demo: watch-it-forget
+  materials:
+    - { title: Tutorial notebooks, url: https://github.com/OWL-ML/LLML25-tutorial_notebooks }
+- id: nai
+  name: Sustainable AI
+  kind: Lecture + Project
+  level: BSc
+  degree: BSc
+  language: de
+  semester: summer
+  stage: perspectives
+  description: >-
+    How AI interfaces with sustainability, both how AI can help or harm global sustainability
+    goals and how sustainability requirements shape AI development. The course links technical
+    concepts, from data acquisition and computation to learning procedures, decision processes
+    and their outcomes, to fairness, ethics, participatory design and regulation.
+  next: [sem-sustainability]
+  themes: [pai]
+  demo: training-footprint
+- id: sem-lifelong
+  name: Advances in Lifelong Learning Machines
+  kind: Seminar
+  level: MSc
+  degree: MSc
+  language: en
+  semester: winter
+  stage: perspectives
+  description: >-
+    Throughout the seminar, students will engage with modern literature that advances the
+    frontiers of lifelong learning machines. They will improve their presentation skills,
+    navigating scientific works, inspect the newest algorithms, and identify persisting
+    limitations and open research questions.
+  next: [guided, thesis]
+  themes: [cl, mc]
+  demo: leaderboard-depends-on-you
+  dimensions:                 # the guiding questions behind each run's readings, see docs/DEMOS.md
+    - name: Memory & consolidation
+      questions: >-
+        What constitutes memorable data points? How can we construct algorithms to identify and
+        extract memorable experience? What types of memories are necessary?
+      theme: mc
+    - name: Optimization & models
+      questions: >-
+        How can we transcend greedy optimizers that overwrite knowledge? How can we dynamically
+        modify architectures? How can we identify learning curricula?
+      theme: gd
+      link_label: Dynamic Architectures   # shorter than the theme's name in "Our work on …"
+    - name: Lifelong learning theory
+      questions: >-
+        What are the advances in transferring ML theory to lifelong ML? What insights and
+        obstacles do grounded advances in analyzable, linear systems reveal?
+      theme: cl
+    - name: Evaluation & benchmarking
+      questions: >-
+        How do we evaluate various inherent trade-offs? How do we select hyper-parameters in
+        evolving scenarios? What techniques & benchmarks exist for comparisons?
+      theme: cl
+- id: sem-sustainability
+  name: Modern Perspectives on AI Sustainability
+  kind: Seminar
+  level: MSc
+  degree: MSc
+  language: en
+  semester: summer
+  stage: perspectives
+  description: >-
+    The seminar covers different aspects of AI sustainability. Students will get to engage with
+    a variety of modern perspectives. Throughout the seminar, they will learn to critically
+    engage with current assessments on AI's impact, analyze the validity of claims with respect
+    to economical, environmental and social sustainability, and separate opportunities from
+    unaddressed harms.
+  next: [guided, thesis]
+  themes: [pai]
+  demo: does-efficiency-save-energy
+  dimensions:                 # the guiding questions behind each run's readings, see docs/DEMOS.md
+    - name: Social
+      questions: >-
+        How inclusive are AI approaches & how do they represent diverse cultures? How do outcomes
+        affect communities? How can AI interface with morals and law?
+      theme: pai
+    - name: (Socio-)Economic
+      questions: >-
+        What is the potential of AI to transform industries and contribute to financial growth?
+        What are applications where AI fell short and how can we spot application hype?
+      theme: cl
+    - name: Compute & Climate
+      questions: >-
+        How flexible & efficient are current workflows? Where does compute excel and where are
+        limits? What are AI's positive & adverse contributions to the environment?
+      theme: cl
+    - name: Human
+      questions: >-
+        What role does AI play in education and democratization of knowledge? In which ways can
+        AI be used to support humans and where is it framed to replace?
+      theme: pai
+- id: mocca
+  name: MOCCA project
+  kind: Project
+  level: MSc
+  degree: MSc
+  language: en
+  semester: winter
+  stage: research
+  description: >-
+    In the Multi-Objective Continual Coffee Automation student project, we will make use of
+    various machine learning tools to go from a package of coffee beans to drinks that are
+    catered to individual preferences. This involves several crucial steps that will be pursued
+    in the project, spanning data acquisition & dataset creation, continual machine learning,
+    inclusion of preferences and natural language feedback.
+  next: [thesis]
+  themes: []
+  demo: dial-in
+- id: guided
+  name: Guided Research
+  kind: Independent study
+  level: AIIS Master
+  degree: MSc
+  semester: winter
+  stage: research
+  description: >-
+    A few weeks of focused work on a sub-topic of one of our thesis directions, as part of the
+    AIIS master's program.
+  next: [thesis]
+  themes: []
+  centrepiece: theses         # links to the theme cards on the thesis page
+- id: thesis
+  name: Thesis
+  kind: Thesis
+  level: BSc / MSc
+  degree: BSc / MSc
+  semester: any
+  stage: research
+  description: Your own research project with the lab, shaped together with you.
+  next: []
+  themes: []
+  centrepiece: theses

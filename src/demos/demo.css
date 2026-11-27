@@ -1,0 +1,132 @@
+/* Shared styles of every demo (frame, buttons, chips). Global on purpose: the demos build their
+   markup in the browser, where Astro's scoped styles do not reach. Used by the site and by the
+   offline files. Class names start with "demo-". */
+.demo {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.demo-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 680px;
+}
+.demo-label {
+  align-self: flex-start;
+  background: var(--teal-200);
+  color: var(--teal-800);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+}
+.demo-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1.1;
+}
+.demo-intro {
+  margin: 0;
+  color: var(--body);
+}
+.demo-notes {
+  border-top: 1px solid var(--hairline);
+  padding-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  font-size: 15px;
+  color: var(--body);
+}
+.demo-notes p {
+  margin: 0;
+  flex: 1 1 360px;
+}
+.demo-notes strong {
+  color: var(--ink);
+}
+.demo-loading {
+  color: var(--body);
+  margin: 0;
+}
+.demo-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.demo-fallback img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-card-sm);
+  border: 1px solid var(--hairline);
+}
+.demo-fallback p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--body);
+}
+
+.demo-btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 11px 20px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.demo-btn-primary {
+  border: 1px solid var(--orange);
+  background: var(--orange);
+  color: var(--on-orange);
+}
+.demo-btn-outline {
+  border: 1px solid var(--teal-700);
+  background: var(--white);
+  color: var(--teal-700);
+}
+.demo-chip {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  background: var(--white);
+  color: var(--ink);
+  border: 1px solid var(--teal-300);
+}
+.demo-chip[aria-pressed='true'] {
+  background: var(--teal-700);
+  color: var(--white);
+  border-color: var(--teal-700);
+}
+.demo-chip-light {
+  font: inherit;
+  font-size: 14px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  border: 1px solid var(--teal-200);
+  background: var(--teal-50);
+  color: var(--teal-800);
+}
+.demo button:focus-visible,
+.demo input:focus-visible {
+  outline: 3px solid var(--teal-600);
+  outline-offset: 2px;
+}
+@media (max-width: 720px) {
+  .demo {
+    padding: 22px 18px;
+  }
+  .demo-title {
+    font-size: 28px;
+  }
+}

@@ -1,0 +1,80 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+
+// Legal pages: "Legal notice & privacy" and the accessibility statement (both English). Text in
+// [brackets] must be supplied or approved by Martin.
+interface Props {
+  title: string;
+  lead?: string;
+  lang?: 'en' | 'de';
+}
+const { title, lead, lang = 'en' } = Astro.props;
+---
+
+<BaseLayout title={title} lang={lang} description={lead}>
+  <PageHero slot="band" title={title} lead={lead} />
+  <div class="container page">
+    <article class="legal">
+      <slot />
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 48px 88px;
+  }
+  .legal {
+    max-width: 820px;
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 40px 44px;
+    color: var(--body);
+  }
+  /* no single word alone on a paragraph's last line (ignored by browsers without support) */
+  .legal :global(p),
+  .legal :global(li) {
+    text-wrap: pretty;
+  }
+  .legal :global(h2),
+  .legal :global(h3) {
+    text-wrap: balance;
+  }
+  .legal :global(h2) {
+    font-size: 26px;
+    color: var(--ink);
+    margin: 32px 0 10px;
+    scroll-margin-top: 16px;
+  }
+  .legal :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .legal :global(h3) {
+    font-size: 19px;
+    color: var(--ink);
+    margin: 20px 0 6px;
+  }
+  .legal :global(p + p),
+  .legal :global(ul + p),
+  .legal :global(p + ul) {
+    margin-top: 0.7em;
+  }
+  .legal :global(ul) {
+    padding-left: 22px;
+    margin: 0;
+  }
+  .legal :global(.ph) {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 15px;
+  }
+  @media (max-width: 720px) {
+    .page {
+      padding-block: 28px 48px;
+    }
+    .legal {
+      padding: 24px;
+    }
+  }
+</style>

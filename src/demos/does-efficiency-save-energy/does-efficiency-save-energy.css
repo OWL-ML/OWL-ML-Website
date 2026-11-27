@@ -1,0 +1,181 @@
+/* Does efficiency save energy? Same visual language as the footprint demo, with tokens. */
+.rb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+.rb-left {
+  flex: 3 1 400px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.rb-right {
+  flex: 2 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rb-ask {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.rb-q {
+  margin: 0;
+  font-size: 18px;
+}
+.rb-guesses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rb-feedback {
+  margin: 0;
+  background: var(--teal-50);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--body);
+}
+.rb-explore {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.rb-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rb-slider-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.rb-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 400;
+}
+.rb-slider input {
+  width: 100%;
+  accent-color: var(--teal-600);
+}
+.rb-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.rb-regime {
+  margin: 0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: var(--teal-50);
+}
+.rb-regime.rb-backfire {
+  background: var(--peach-100);
+  color: var(--on-peach);
+}
+.rb-label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--body);
+}
+.rb-unit {
+  font-weight: 400;
+}
+.rb-bars {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rb-bar {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--body);
+}
+.rb-track {
+  position: relative;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline);
+}
+.rb-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: #9fd0c4;
+  transition: width 0.25s ease-out;
+}
+.rb-up .rb-fill {
+  background: var(--orange);
+}
+.rb-today {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--ink);
+}
+.rb-bar-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: right;
+}
+.rb-chart {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+.rb-zone {
+  fill: var(--peach-100);
+}
+.rb-axis {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.rb-ref {
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.rb-small {
+  font-size: 11px;
+  fill: var(--body);
+  font-family: var(--font-body);
+}
+.rb-zone-label {
+  fill: var(--orange-ink);
+}
+.rb-curve {
+  fill: none;
+  stroke: var(--teal-600);
+  stroke-width: 2.5;
+}
+.rb-dot {
+  fill: var(--orange);
+  stroke: var(--white);
+  stroke-width: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rb-fill {
+    transition: none;
+  }
+}
+@media (max-width: 720px) {
+  .rb-bar {
+    grid-template-columns: 110px minmax(0, 1fr) 40px;
+  }
+}

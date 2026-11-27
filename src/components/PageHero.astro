@@ -1,0 +1,129 @@
+---
+// Teal title band below the header on every page except the homepage.
+// Slots: default (extra content under the lead), "actions" (right-hand buttons),
+// "tabs" (folder tabs that sit on the band's lower edge), "media" (left image, profiles).
+interface Props {
+  title: string;
+  /** a line break (\n) in the text is kept */
+  lead?: string;
+  /** breadcrumb trail above the title: [{ label, href? }] */
+  crumbs?: { label: string; href?: string }[];
+  lang?: string;
+}
+const { title, lead, crumbs, lang } = Astro.props;
+const hasTabs = Astro.slots.has('tabs');
+const hasMedia = Astro.slots.has('media');
+---
+
+<div class:list={['page-hero', hasTabs && 'with-tabs']} lang={lang}>
+  <div class:list={['container', 'inner', hasMedia && 'with-media']}>
+    {hasMedia && <slot name="media" />}
+    <div class="text">
+      {crumbs && (
+        <nav class="crumbs" aria-label="Breadcrumb">
+          {crumbs.map((c, i) => (
+            <>
+              {i > 0 && <span aria-hidden="true"> / </span>}
+              {c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}
+            </>
+          ))}
+        </nav>
+      )}
+      <h1>{title}</h1>
+      {lead && <p class="lead">{lead}</p>}
+      <slot />
+    </div>
+    {Astro.slots.has('actions') && (
+      <div class="actions">
+        <slot name="actions" />
+      </div>
+    )}
+  </div>
+  {hasTabs && (
+    <div class="container tabs">
+      <slot name="tabs" />
+    </div>
+  )}
+</div>
+
+<style>
+  .page-hero {
+    background: var(--teal-700);
+    color: var(--on-dark);
+  }
+  .inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px 32px;
+    padding-block: 32px 56px;
+  }
+  .with-tabs .inner {
+    padding-bottom: 40px;
+  }
+  .with-media {
+    justify-content: flex-start;
+    gap: 24px 40px;
+    padding-block: 28px 60px;
+  }
+  .text {
+    flex: 1 1 520px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  h1 {
+    color: var(--white);
+    font-size: clamp(36px, 4.6vw, 56px);
+    line-height: 1.05;
+  }
+  .lead {
+    font-size: 19px;
+    color: var(--on-dark-muted);
+    max-width: 620px;
+    white-space: pre-line;
+  }
+  .crumbs {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--on-dark-subtle);
+  }
+  .crumbs a {
+    color: var(--on-dark-subtle);
+  }
+  .crumbs a:hover {
+    color: var(--white);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+  }
+  .page-hero :global(a:focus-visible),
+  .page-hero :global(button:focus-visible) {
+    outline-color: var(--peach-light);
+  }
+  @media (max-width: 720px) {
+    .inner {
+      padding-block: 20px 40px;
+    }
+    .lead {
+      font-size: 17px;
+    }
+    .with-media {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    /* in a column the 520px flex basis would become a height */
+    .with-media .text {
+      flex: none;
+      width: 100%;
+    }
+  }
+</style>

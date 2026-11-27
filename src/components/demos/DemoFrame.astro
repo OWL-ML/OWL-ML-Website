@@ -1,0 +1,89 @@
+---
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import '../../demos/demo.css';
+import { demoBySlug } from '../../demos/registry';
+import { demoHead, demoNotes } from '../../demos/frame';
+import { loaders } from '../../demos/loaders';
+
+// One course demo (docs/DEMOS.md). Without JavaScript, and until the demo scrolls into view, it
+// shows its title, text and a screenshot. The interactive part (src/demos/<slug>/ui.ts) and its
+// data are loaded only when the demo becomes visible, so hidden demos load nothing.
+interface Props {
+  slug: string;
+  courseName: string;
+  /** heading level of the demo title; null when the page title already names the demo */
+  headingLevel: 2 | 3 | null;
+}
+const { slug, courseName, headingLevel } = Astro.props;
+const d = demoBySlug.get(slug)!;
+const ready = slug in loaders;
+const shots = import.meta.glob<{ default: ImageMetadata }>('../../assets/demos/*.png', {
+  eager: true,
+});
+const shot = shots[`../../assets/demos/${slug}.png`]?.default;
+---
+
+<div class="demo" data-demo={ready ? slug : undefined}>
+  <Fragment set:html={demoHead(d, courseName, headingLevel)} />
+  <div data-demo-live>
+    <div class="demo-fallback">
+      {shot && (
+        <Picture
+          src={shot}
+          formats={['avif', 'webp']}
+          layout="none"
+          alt={`Screenshot of the demo “${d.title}”.`}
+          widths={[640, 1280]}
+          sizes="(max-width: 1200px) 100vw, 1136px"
+        />
+      )}
+      <p>
+        {ready
+          ? 'The interactive demo needs JavaScript.'
+          : 'A screenshot of the prototype. The interactive version follows.'}
+      </p>
+    </div>
+  </div>
+  <Fragment set:html={demoNotes(d)} />
+</div>
+
+<script>
+  import { loaders } from '../../demos/loaders';
+
+  const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const start = async (el: HTMLElement) => {
+    const slug = el.dataset.demo!;
+    const live = el.querySelector<HTMLElement>('[data-demo-live]')!;
+    try {
+      const { mount } = await loaders[slug]!();
+      await mount(live, {
+        motion,
+        file: async (name) => {
+          const r = await fetch(`/demos/${slug}/${name}`);
+          if (!r.ok) throw new Error(`${name}: ${r.status}`);
+          return r.text();
+        },
+      });
+      el.dataset.demoReady = '';
+    } catch (e) {
+      console.error(e);
+      live.insertAdjacentHTML(
+        'afterbegin',
+        '<p class="demo-loading">The demo could not be loaded. Please reload the page.</p>',
+      );
+    }
+  };
+  // nothing is loaded until a demo is (nearly) on screen; hidden demos never intersect
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        void start(e.target as HTMLElement);
+      }
+    },
+    { rootMargin: '200px' },
+  );
+  document.querySelectorAll<HTMLElement>('[data-demo]').forEach((el) => io.observe(el));
+</script>

@@ -1,0 +1,34 @@
+# Theme vocabulary (agreed October 2026; one-liners revised by Martin, November 2026).
+# Order = display order everywhere. Names and short tags are final; descriptions may still be
+# refined.
+- id: gd
+  name: Generative & Dynamic Models
+  short: Generative & dynamic
+  oneliner: Models that reshape themselves as they learn
+  description: >-
+    Models that generate and express uncertainty, and networks that grow, branch and merge
+    their structure.
+  map: { x: 140 }
+- id: mc
+  name: Memory & Consolidation
+  short: Memory & consolidation
+  oneliner: How knowledge is stored and made to last
+  description: >-
+    What to store, retrieve and replay, and how knowledge becomes lasting, drawing on
+    how brains consolidate.
+  map: { x: 380 }
+- id: cl
+  name: Continual Machine Learning
+  short: Continual learning
+  oneliner: Learning that builds on what came before
+  description: >-
+    Learning from a sequence of data without forgetting, and forgetting on purpose when needed.
+  map: { x: 620 }
+- id: pai
+  name: Participatory AI
+  short: Participatory AI
+  oneliner: Learning systems shaped with those they affect
+  description: >-
+    Fairness, inclusion and transparency in systems that keep learning, shaped with the people
+    affected.
+  map: { x: 860 }

@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+# Publishes the built site with GitHub Pages (docs/DEPLOYMENT.md). For now it only runs
+# when started by hand (Actions → Deploy to GitHub Pages → Run workflow), and it can only succeed
+# once the repository is public and Pages is switched on (Settings → Pages → Source: GitHub
+# Actions). After the switch to owl-ml.com, add `push: branches: [main]` below so every merge
+# goes live.
+on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: >-
+          Address to build for, e.g. https://new.owl-ml.com while testing. Leave empty for the
+          site's address (src/lib/site-url.ts).
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one deployment at a time; a running one is never cancelled halfway
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  ASTRO_TELEMETRY_DISABLED: '1'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Build (checks all content; absolute links, sitemap and share images use the address)
+        run: npm run build
+        env:
+          SITE_URL: ${{ inputs.site_url }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

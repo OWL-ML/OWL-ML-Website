@@ -1,0 +1,146 @@
+/* Watch it forget. Layout and colours follow the agreed prototype, with design tokens. */
+.fg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.fg-plot {
+  flex: 3 1 420px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fg-tasks {
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--body);
+}
+.fg-tasks span {
+  flex: 1;
+  text-align: center;
+}
+.fg-canvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 2.6;
+  border-radius: 14px;
+  border: 1px solid var(--teal-200);
+}
+.fg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-size: 13px;
+  color: var(--body);
+}
+.fg-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fg-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.fg-orange {
+  background: var(--orange);
+}
+.fg-teal {
+  background: var(--teal-600);
+}
+.fg-ring {
+  box-shadow:
+    0 0 0 2px var(--white),
+    0 0 0 4px var(--ink);
+  margin: 0 3px;
+}
+.fg-side {
+  flex: 2 1 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.fg-group,
+.fg-lambda {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fg-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--body);
+}
+.fg-chips,
+.fg-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fg-lambda input {
+  accent-color: var(--teal-600);
+  width: 100%;
+}
+.fg-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--muted);
+}
+.fg-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fg-bar-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.fg-bar-text {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--body);
+}
+.fg-track {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline);
+}
+.fg-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--teal-600);
+  transition: width 0.2s;
+}
+.fg-fill.fg-low {
+  background: var(--orange);
+}
+.fg-note {
+  margin: 0;
+  background: var(--teal-50);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 15px;
+}
+.fg-note-result {
+  background: var(--peach-100);
+  color: var(--on-peach);
+}
+.fg [aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fg-fill {
+    transition: none;
+  }
+}

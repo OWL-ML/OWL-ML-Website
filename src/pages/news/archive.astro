@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import YearRail from '../../components/YearRail.astro';
+import NewsRow from '../../components/news/NewsRow.astro';
+import { getArchivedNews, groupBy } from '../../lib/data';
+import { formatMonthLong } from '../../lib/format';
+
+// News from before the lab moved to Bremen (dated before `news_archive_before` in site.yml),
+// one month timeline, newest first. /news/archive/#<id> leads to an item and opens its text.
+const news = await getArchivedNews();
+const months = groupBy(news, (n) => n.data.date.slice(0, 7));
+---
+
+<BaseLayout
+  title="News archive"
+  current="news"
+  description="News from the OWL-ML lab from before its move to the University of Bremen in November 2024."
+>
+  <PageHero
+    slot="band"
+    title="News archive"
+    lead="News from before the lab moved to the University of Bremen in November 2024."
+    crumbs={[{ label: 'News', href: '/news/' }, { label: 'Archive' }]}
+  />
+  <div class="container page">
+    {months.map(([m, items]) => (
+      <YearRail label={formatMonthLong(m)} size="wide" level={2}>
+        {items.map((n) => (
+          <NewsRow item={n} level={3} anchor />
+        ))}
+      </YearRail>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 48px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  @media (max-width: 720px) {
+    .page {
+      padding-block: 28px 48px;
+    }
+  }
+</style>

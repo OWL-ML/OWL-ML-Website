@@ -1,0 +1,246 @@
+/* Step through Python. Layout and colours follow the agreed prototype, with design tokens. */
+.py {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.py-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.py-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.py-left {
+  flex: 1 1 380px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.py-right {
+  flex: 1 1 380px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.py-code {
+  margin: 0;
+  padding: 16px 0;
+  list-style: none;
+  background: var(--ink);
+  color: var(--on-dark);
+  border-radius: 16px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1.75;
+  overflow-x: auto;
+}
+.py-line {
+  display: flex;
+  align-items: center;
+  padding: 0 16px 0 6px;
+}
+.py-current {
+  background: var(--teal-line-dark);
+}
+.py-mark {
+  width: 18px;
+  color: var(--peach-light);
+}
+.py-n {
+  width: 26px;
+  text-align: right;
+  margin-right: 14px;
+  color: var(--on-dark-subtle);
+}
+.py-src {
+  font: inherit;
+  white-space: pre;
+}
+.py-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.py-nav [aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+}
+.py-step {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--body);
+}
+.py-ask {
+  background: var(--teal-50);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.py-question {
+  margin: 0;
+  font-weight: 600;
+}
+.py-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.py-option {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--teal-300);
+  background: var(--white);
+  color: var(--ink);
+  cursor: pointer;
+}
+.py-skip {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--teal-600);
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.py-again {
+  margin-bottom: 8px;
+}
+.py-verdict {
+  background: var(--peach-100);
+  color: var(--on-peach);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 4px;
+}
+.py-verdict.py-right-answer {
+  background: var(--teal-200);
+  color: var(--teal-800);
+}
+.py-verdict p {
+  margin: 0;
+  font-size: 15px;
+}
+.py-verdict .py-verdict-title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.py-state {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.py-head {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--body);
+}
+.py-box {
+  border: 1px solid var(--teal-200);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--white);
+}
+.py-box + .py-box {
+  margin-top: 8px;
+}
+.py-frame {
+  margin: 0;
+  font-size: 13px;
+  color: var(--body);
+}
+.py-var {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.py-name {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.py-prim {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.py-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--teal-200);
+  color: var(--teal-800);
+}
+.py-chip.py-shared {
+  background: var(--orange);
+  color: var(--on-orange);
+}
+.py-obj-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.py-type {
+  font-size: 13px;
+  color: var(--body);
+}
+.py-text {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.py-touched {
+  background: var(--peach-100);
+  border-color: var(--peach-light);
+}
+.py-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.py-out {
+  margin: 0;
+  min-height: 60px;
+  background: var(--teal-50);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+.py-foot {
+  margin: 0;
+  font-size: 14px;
+  color: var(--body);
+}
+@media (max-width: 720px) {
+  .py-state {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

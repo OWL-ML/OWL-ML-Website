@@ -1,0 +1,680 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Button from '../../components/Button.astro';
+import ThemeTag from '../../components/ThemeTag.astro';
+import NumberedSteps from '../../components/NumberedSteps.astro';
+import YearRail from '../../components/YearRail.astro';
+import { getThemes } from '../../lib/themes';
+import { getTheses, getCourses, internships, groupBy } from '../../lib/data';
+import { site, contactEmail } from '../../lib/site';
+import { formatMonth } from '../../lib/format';
+
+const themes = await getThemes();
+// Theses supervised at TU Darmstadt (archive: true) are listed on /theses/archive/ only.
+const theses = (await getTheses()).filter((t) => !t.archive);
+const courses = await getCourses();
+
+const ongoing = theses.filter((t) => t.status === 'ongoing');
+const completed = theses
+  .filter((t) => t.status === 'completed')
+  .sort((a, b) => {
+    const da = a.date && !a.date.startsWith('[') ? a.date : '0000';
+    const db = b.date && !b.date.startsWith('[') ? b.date : '0000';
+    return db.localeCompare(da);
+  });
+const byYear = groupBy(completed, (t) =>
+  t.date && !t.date.startsWith('[') ? t.date.slice(0, 4) : 'Earlier',
+);
+const groups: [string, typeof theses][] = [['Ongoing', ongoing], ...byYear];
+
+const themePanels = themes.map((t) => ({
+  theme: t,
+  ongoing: ongoing.filter((x) => x.themes.includes(t.id)),
+  completed: completed.filter((x) => x.themes.includes(t.id)),
+  courses: courses.filter((c) => c.themes.includes(t.id)),
+}));
+
+const thesisMeta = (t: (typeof theses)[number]) =>
+  [
+    t.status === 'completed' && t.date ? formatMonth(t.date) : null,
+    t.institution !== 'Universität Bremen' ? t.institution : null,
+    t.note,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+const mailto = contactEmail ? `mailto:${contactEmail}` : null;
+---
+
+<BaseLayout
+  title="Theses"
+  current="theses"
+  description="Bachelor's and Master's theses at the OWL-ML lab."
+>
+  <section class="hero" slot="band">
+    <div class="container hero-inner">
+      <h1>Theses</h1>
+      <p class="lead">
+        Join us to work on machine learning that keeps learning throughout its lifecycle, and on
+        making AI more sustainable, inclusive and accessible.
+      </p>
+      <div class="hero-actions">
+        <Button href="#reach-out">How to reach out</Button>
+        <Button href="#internships" variant="on-dark">
+          Internships
+        </Button>
+        <p class="eligibility">
+          Thesis supervision is for students enrolled at the University of Bremen.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container section" id="themes" aria-labelledby="themes-h">
+    <div class="section-intro wide">
+      <h2 id="themes-h">Themes we work on</h2>
+      <p>
+        {site.story} Every thesis starts from these themes and from your interests. Pick a theme to
+        see the theses that grew out of it and the courses that prepare you for it.
+      </p>
+    </div>
+    <div class="theme-picker" data-theme-picker>
+      <ul class="theme-cards">
+        {themes.map((t, i) => (
+          <li>
+            <a
+              class="theme-card"
+              href={`#theme-${t.id}`}
+              data-theme-tab={t.id}
+              aria-current={i === 0 ? 'true' : undefined}
+            >
+              <span class="name">{t.name}</span>
+              <span class="desc">{t.description}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      {themePanels.map(({ theme, ongoing, completed, courses }) => (
+        <section
+          class="panel"
+          id={`theme-${theme.id}`}
+          data-theme-panel={theme.id}
+          aria-labelledby={`panel-${theme.id}`}
+        >
+          <div class="panel-main">
+            <p class="kicker">Theme</p>
+            <h3 id={`panel-${theme.id}`}>{theme.name}</h3>
+            {ongoing.length + completed.length > 0 && (
+              <ul class="mini">
+                {[...ongoing, ...completed].map((x) => (
+                  <li>
+                    <span class="mini-title">{x.title}</span>{' '}
+                    <span class="mini-meta">
+                      {[
+                        x.student,
+                        x.degree,
+                        x.status === 'ongoing' ? 'ongoing' : x.date && formatMonth(x.date),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {ongoing.length + completed.length === 0 && (
+              <p class="mini-meta">No theses in this theme yet.</p>
+            )}
+          </div>
+          <aside class="panel-side">
+            {courses.length > 0 && (
+              <>
+                <h4>Helpful courses</h4>
+                <ul class="side-links">
+                  {courses.map((c) => (
+                    <li>
+                      <a href={`/teaching/#course-${c.id}`}>{c.name}</a>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <h4>Related research</h4>
+            <ul class="side-links">
+              <li>
+                <a href={`/publications/?theme=${theme.id}`}>Publications in this theme →</a>
+              </li>
+              <li>
+                <a href="/#research">See it in the research map →</a>
+              </li>
+            </ul>
+          </aside>
+        </section>
+      ))}
+    </div>
+  </section>
+
+  <section class="container section" id="reach-out" aria-labelledby="reach-h">
+    <h2 id="reach-h">How to reach out</h2>
+    <NumberedSteps
+      steps={[
+        {
+          title: 'Explore our themes',
+          text: 'Browse the themes above and our publications. Topics far outside our area are unlikely to be a good fit.',
+          link: { label: 'Publications →', href: '/publications/' },
+        },
+        {
+          title: 'Check the courses',
+          text: "For a Master's thesis, you have ideally taken our courses or have equivalent knowledge. For a Bachelor's thesis, some background helps and motivation matters most.",
+          link: { label: 'Our course path →', href: '/teaching/' },
+        },
+        {
+          title: 'Get in touch',
+          text: "Talk to us in person or send an email. We'll work out an individual plan with you.",
+          link: { label: 'What to include ↓', href: '#include' },
+        },
+      ]}
+    />
+    <div class="include" id="include">
+      <img src="/brand/owl.svg" alt="" width="230" height="320" class="owl" />
+      <div class="include-text">
+        <h3>In your message, tell us</h3>
+        <ul class="checks">
+          <li>your degree program and academic background,</li>
+          <li>what motivates you and which themes interest you,</li>
+          <li>when you plan to start and finish.</li>
+        </ul>
+      </div>
+      {mailto ? (
+        <Button href={mailto}>Write to us</Button>
+      ) : (
+        <span class="mail-missing">
+          Write to us: <span class="placeholder-peach">{site.contact_email}</span>
+        </span>
+      )}
+    </div>
+  </section>
+
+  <section class="container section" id="theses-list" aria-labelledby="list-h">
+    <div class="section-intro wide">
+      <h2 id="list-h">Theses with us</h2>
+      <p>What students have explored with the lab. Titles of ongoing theses are working titles.</p>
+    </div>
+    <div class="degree-filter" data-degree-filter hidden>
+      <span class="label" id="degree-label">
+        Show
+      </span>
+      <div role="group" aria-labelledby="degree-label" class="degree-buttons">
+        <button type="button" class="chip-btn" aria-pressed="true" data-degree="">
+          All theses
+        </button>
+        <button type="button" class="chip-btn" aria-pressed="false" data-degree="BSc">
+          Bachelor
+        </button>
+        <button type="button" class="chip-btn" aria-pressed="false" data-degree="MSc">
+          Master
+        </button>
+      </div>
+    </div>
+    <div class="thesis-groups">
+      {groups.map(([label, items]) => (
+        <YearRail
+          label={label}
+          size="thesis"
+          tone={label === 'Ongoing' ? 'accent' : 'year'}
+          level={3}
+        >
+          {items.map((t) => (
+            <article class="thesis" data-degree={t.degree}>
+              <h4>{t.title}</h4>
+              <div class="thesis-meta">
+                <span class="student">{t.student}</span>
+                <span class="degree" title={t.degree === 'BSc' ? 'Bachelor' : 'Master'}>
+                  {t.degree}
+                </span>
+                {thesisMeta(t) && <span class="meta">{thesisMeta(t)}</span>}
+                {t.themes.map((th) => (
+                  <ThemeTag id={th} />
+                ))}
+              </div>
+            </article>
+          ))}
+        </YearRail>
+      ))}
+    </div>
+  </section>
+
+  <section class="container section" id="internships" aria-labelledby="intern-h">
+    <div class="section-intro">
+      <h2 id="intern-h">Internships</h2>
+      <p>We host interns through structured exchange programs rather than open positions.</p>
+    </div>
+    <div class="intern-grid">
+      <div class="card">
+        <h3>What we offer</h3>
+        <ul>
+          {internships.policy.offer.map((o) => (
+            <li>{o}</li>
+          ))}
+        </ul>
+      </div>
+      <div class="card">
+        <h3>What we can't offer</h3>
+        <ul>
+          {internships.policy.cannot_offer.map((o) => (
+            <li>{o}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+    <h3 class="interns-h">Current and prior interns</h3>
+    <ul class="interns">
+      {internships.interns.map((i) => (
+        <li>
+          <span class="intern-name">{i.name}</span>
+          <span class="meta">
+            {i.year} · {i.from}
+          </span>
+          {i.topic && <span class="intern-topic">{i.topic}</span>}
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>
+
+<script>
+  import { animateChange, revealPanel, transitionName } from '../../lib/motion';
+
+  // Theme picker: show one theme panel at a time. Without JavaScript all panels are listed.
+  const picker = document.querySelector<HTMLElement>('[data-theme-picker]');
+  if (picker) {
+    const tabs = [...picker.querySelectorAll<HTMLAnchorElement>('[data-theme-tab]')];
+    const panels = [...picker.querySelectorAll<HTMLElement>('[data-theme-panel]')];
+    let shown = false; // the first panel (page load) is not animated
+    const show = (id: string, focus = false) => {
+      tabs.forEach((t) => t.setAttribute('aria-current', String(t.dataset.themeTab === id)));
+      const before = panels.find((p) => !p.hidden);
+      panels.forEach((p) => (p.hidden = p.dataset.themePanel !== id));
+      const now = panels.find((p) => !p.hidden);
+      if (shown && now !== before) revealPanel(now); // a different theme fades in
+      shown = true;
+      if (focus)
+        panels
+          .find((p) => !p.hidden)
+          ?.querySelector('h3')
+          ?.focus();
+    };
+    picker.classList.add('enhanced');
+    const fromHash = location.hash.startsWith('#theme-') ? location.hash.slice(7) : '';
+    show(tabs.some((t) => t.dataset.themeTab === fromHash) ? fromHash : tabs[0]!.dataset.themeTab!);
+    tabs.forEach((t) =>
+      t.addEventListener('click', (e) => {
+        e.preventDefault();
+        show(t.dataset.themeTab!);
+        history.replaceState(null, '', `#theme-${t.dataset.themeTab}`);
+      }),
+    );
+  }
+
+  // Degree filter (Bachelor / Master). Hidden without JavaScript; the full list is shown then.
+  const filter = document.querySelector<HTMLElement>('[data-degree-filter]');
+  if (filter) {
+    filter.hidden = false;
+    const buttons = [...filter.querySelectorAll<HTMLButtonElement>('button')];
+    const theses = [...document.querySelectorAll<HTMLElement>('.thesis')];
+    const years = [...document.querySelectorAll<HTMLElement>('.thesis-groups .year-rail')];
+    // the list moves like the publications list (src/lib/motion.ts)
+    const named = (): [HTMLElement, string][] => [
+      ...theses.map((el, i): [HTMLElement, string] => [el, transitionName('thesis', String(i))]),
+      ...years.map((g, i): [HTMLElement, string] => [g, transitionName('thesis-year', String(i))]),
+    ];
+    buttons.forEach((b) =>
+      b.addEventListener('click', () => {
+        const degree = b.dataset.degree;
+        buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        animateChange(() => {
+          theses.forEach((el) => {
+            el.hidden = Boolean(degree) && el.dataset.degree !== degree;
+          });
+          years.forEach((g) => {
+            g.hidden = !g.querySelector('.thesis:not([hidden])');
+          });
+        }, named);
+      }),
+    );
+  }
+</script>
+
+<style>
+  .hero {
+    background: var(--teal-700);
+    color: var(--on-dark);
+  }
+  .hero-inner {
+    padding-block: 32px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  h1 {
+    color: var(--white);
+    font-size: clamp(36px, 4.6vw, 56px);
+  }
+  .lead {
+    font-size: 19px;
+    color: var(--on-dark-muted);
+    max-width: 720px;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .hero :global(a:focus-visible) {
+    outline-color: var(--peach-light);
+  }
+  .eligibility {
+    font-size: 14px;
+    color: var(--on-dark);
+    background: var(--teal-750);
+    border: 1px solid var(--teal-line-dark);
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+  /* a little wider text under these headings (the cap sits on the text, see base.css) */
+  .section-intro.wide p {
+    max-width: 860px;
+  }
+  .theme-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .theme-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* name and description share rows across the cards (subgrid), so the descriptions start at the
+     same height even when one name fits on a single line and the others need two */
+  .theme-cards > li {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+  }
+  .theme-card {
+    grid-row: span 2;
+    display: grid;
+    grid-template-rows: subgrid;
+    row-gap: 6px;
+    padding: 20px;
+    background: var(--white);
+    border-radius: 18px;
+    border: 1px solid var(--white);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .theme-card:hover {
+    border-color: var(--teal-500);
+  }
+  .enhanced .theme-card[aria-current='true'] {
+    background: var(--teal-700);
+    border-color: var(--teal-700);
+    color: var(--white);
+  }
+  .enhanced .theme-card[aria-current='true'] .desc {
+    color: var(--on-dark-muted);
+  }
+  .enhanced .theme-card[aria-current='true']:focus-visible {
+    outline-color: var(--orange);
+  }
+  .name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1.15;
+  }
+  .desc {
+    font-size: 14px;
+    color: var(--body);
+  }
+  .panel {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 28px;
+    scroll-margin-top: 16px;
+  }
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--teal-600);
+  }
+  .panel h3 {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  .panel h3:focus {
+    outline: none;
+  }
+  h4 {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 12px 0 6px;
+  }
+  .mini,
+  .side-links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mini-title {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .mini-meta {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .panel-side {
+    background: var(--teal-50);
+    border-radius: 16px;
+    padding: 18px 20px;
+    align-self: start;
+  }
+  .panel-side h4:first-child {
+    margin-top: 0;
+  }
+  .side-links {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .include {
+    background: var(--peach-200);
+    border-radius: 26px;
+    padding: 32px 40px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px 32px;
+  }
+  .include .owl {
+    height: 110px;
+    width: auto;
+  }
+  .include-text {
+    flex: 1 1 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--on-peach);
+  }
+  .include-text h3 {
+    font-size: 26px;
+  }
+  .checks {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .checks li::before {
+    content: '✓';
+    color: var(--orange-ink);
+    font-weight: 700;
+    margin-right: 10px;
+  }
+  .mail-missing {
+    font-weight: 600;
+    color: var(--on-peach);
+  }
+  .placeholder-peach {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--on-peach-muted);
+  }
+  .degree-filter:not([hidden]) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .degree-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  .chip-btn {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    border: 1px solid var(--teal-300);
+    cursor: pointer;
+  }
+  .chip-btn[aria-pressed='true'] {
+    background: var(--teal-700);
+    border-color: var(--teal-700);
+    color: var(--white);
+  }
+  .thesis-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .thesis {
+    background: var(--white);
+    border-radius: var(--radius-card-sm);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .thesis h4 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.35;
+  }
+  .thesis-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    font-size: 14px;
+  }
+  .student {
+    font-weight: 600;
+  }
+  .degree {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--teal-700);
+    color: var(--white);
+    padding: 2px 8px;
+    border-radius: var(--radius-label);
+  }
+  .intern-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 26px 28px;
+  }
+  .card h3 {
+    font-size: 23px;
+    margin-bottom: 10px;
+  }
+  .card ul {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--body);
+  }
+  /* same size as the card headings above it */
+  .interns-h {
+    font-size: 23px;
+  }
+  .interns {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .interns li {
+    background: var(--white);
+    border-radius: var(--radius-card-sm);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .intern-name {
+    font-weight: 600;
+  }
+  .intern-topic {
+    font-size: 14px;
+    color: var(--body);
+  }
+  @media (max-width: 1000px) {
+    .theme-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .panel {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 720px) {
+    .theme-cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .panel {
+      padding: 22px;
+    }
+    .include {
+      padding: 24px;
+    }
+    .include .owl {
+      height: 72px;
+    }
+  }
+</style>

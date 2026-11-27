@@ -1,0 +1,55 @@
+---
+// Small line icons drawn for this site (24 x 24 grid, stroke = currentColor). Always decorative:
+// the surrounding text carries the meaning, so they are hidden from screen readers.
+interface Props {
+  name:
+    | 'menu'
+    | 'close'
+    | 'arrow-right'
+    | 'arrow-down'
+    | 'external'
+    | 'rss'
+    | 'play'
+    | 'paper'
+    | 'person'
+    | 'funding'
+    | 'megaphone'
+    | 'award'
+    | 'calendar';
+  size?: number;
+  class?: string;
+}
+const { name, size = 18, class: className } = Astro.props;
+const paths: Record<Props['name'], string> = {
+  menu: 'M4 7h16M4 12h16M4 17h16',
+  close: 'M6 6l12 12M18 6L6 18',
+  'arrow-right': 'M5 12h14M13 6l6 6-6 6',
+  'arrow-down': 'M12 5v14M6 13l6 6 6-6',
+  external: 'M8 16L16 8M9 8h7v7',
+  rss: 'M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8M6 18.5h.01',
+  play: 'M8 5.5v13l11-6.5z',
+  paper: 'M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5',
+  person: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20a7.5 7.5 0 0 1 15 0',
+  funding: 'M3 9l9-5 9 5M5 9v9M9.5 9v9M14.5 9v9M19 9v9M3 20h18',
+  megaphone: 'M4 10v4h3l7 4V6L7 10zM17 9.5a3.5 3.5 0 0 1 0 5',
+  award: 'M12 14a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM9 13.5L8 21l4-2 4 2-1-7.5',
+  calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
+};
+const filled = name === 'play';
+---
+
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill={filled ? 'currentColor' : 'none'}
+  stroke="currentColor"
+  stroke-width={filled ? 0 : 2}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d={paths[name]}></path>
+</svg>

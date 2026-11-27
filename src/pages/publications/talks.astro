@@ -1,0 +1,124 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import HeroTab from '../../components/HeroTab.astro';
+import RecordingCard from '../../components/talks/RecordingCard.astro';
+import SlidesCard from '../../components/talks/SlidesCard.astro';
+import { getTalks, personNames } from '../../lib/data';
+import { formatMonth } from '../../lib/format';
+import type { ImageMetadata } from 'astro';
+
+const talks = await getTalks();
+// No talks yet (before launch): the address leads to the papers instead of an empty page.
+if (talks.length === 0) return Astro.redirect('/publications/');
+const names = await personNames();
+const thumbs = import.meta.glob<{ default: ImageMetadata }>('../../assets/talks/*.{webp,png,jpg}');
+const thumbFor = async (file?: string) => {
+  const loader = file ? thumbs[`../../assets/talks/${file}`] : undefined;
+  return loader ? (await loader()).default : undefined;
+};
+const card = async (t: (typeof talks)[number]) => ({
+  t,
+  meta: `${formatMonth(t.data.date)} · ${[t.data.event, t.data.location].filter(Boolean).join(', ')}`,
+  speakers: t.data.speakers.map((s) => ({ name: names.get(s) ?? s, href: `/people/${s}/` })),
+  thumbnail: await thumbFor(t.data.thumbnail),
+});
+const recordings = await Promise.all(talks.filter((t) => t.data.video).map(card));
+const slides = await Promise.all(talks.filter((t) => t.data.slides).map(card));
+---
+
+<BaseLayout
+  title="Talks & media"
+  current="publications"
+  description="Slides, posters and recordings from the OWL-ML lab's talks."
+>
+  <PageHero
+    slot="band"
+    title="Talks & media"
+    lead="Slides, posters and recordings from the lab's talks."
+  >
+    <Fragment slot="tabs">
+      <HeroTab href="/publications/">Papers</HeroTab>
+      <HeroTab href="/publications/talks/" current>
+        Talks &amp; media
+      </HeroTab>
+    </Fragment>
+  </PageHero>
+
+  <div class="container page">
+    {talks.length === 0 && (
+      <p class="empty">Talks, slides and recordings from the lab will appear here.</p>
+    )}
+    {recordings.length > 0 && (
+      <section class="block" aria-labelledby="rec-h">
+        <div class="section-head">
+          <h2 id="rec-h">Recordings</h2>
+        </div>
+        <div class="grid2">
+          {recordings.map(({ t, meta, speakers }) => (
+            <RecordingCard
+              youtube={t.data.video!.youtube}
+              duration={t.data.video!.duration}
+              title={t.data.title}
+              meta={meta}
+              speakers={speakers}
+              slides={t.data.slides}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+    {slides.length > 0 && (
+      <section class="block" aria-labelledby="slides-h">
+        <div class="section-head">
+          <h2 id="slides-h">Slides &amp; posters</h2>
+        </div>
+        <div class="grid3">
+          {slides.map(({ t, meta, speakers, thumbnail }) => (
+            <SlidesCard
+              title={t.data.title}
+              meta={meta}
+              kind={t.data.kind === 'poster' ? 'poster' : 'slides'}
+              speakers={speakers}
+              file={t.data.slides}
+              recording={
+                t.data.video ? `https://www.youtube.com/watch?v=${t.data.video.youtube}` : undefined
+              }
+              thumbnail={thumbnail}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 48px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+  .empty {
+    background: var(--white);
+    border-radius: var(--radius-card);
+    padding: 28px 32px;
+    color: var(--body);
+  }
+  .block {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+    gap: 28px;
+  }
+  .grid3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 28px;
+  }
+</style>

@@ -1,0 +1,17 @@
+# From the current Theses/Internships page (read 7 Oct 2026).
+policy:
+  offer:
+    - Participation in structured programs, including one with Mahidol University (Thailand), as well as DAAD and Erasmus.
+    - Support for applications to such programs or other funding schemes, given mutual interest.
+    - Hosting interns when the sending institution provides dedicated funding.
+  cannot_offer:
+    - An open-position internship program for undergraduates, as is common in the US.
+    - Completely unpaid internships, which we generally don't consider.
+interns:
+  - { name: Federico Di Valerio, year: "2026/27", from: Sapienza Università di Roma, topic: Explainability for continual learning }
+  - { name: Joana Vale Sousa, year: 2026, from: INESC TEC Porto, topic: Continual learning in medical imaging }
+  - { name: Zwe Nyan Zaw, year: 2026, from: Mahidol University, topic: Continual learning centered question answering }
+  - { name: Pongsakorn Arayasak, year: 2026, from: Mahidol University, topic: Continual learning centered question answering }
+  - { name: Andrea Fanti, year: 2025, from: Sapienza Università di Roma, topic: Curricula in continual reinforcement learning }
+  - { name: Tanadhon Dumnernpan, year: 2025, from: Mahidol University, topic: Continual confounding }
+# Joana Vale Sousa and Andrea Fanti (PhD internships): topics from their welcome news posts.

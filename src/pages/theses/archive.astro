@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import YearRail from '../../components/YearRail.astro';
+import { getTheses, groupBy } from '../../lib/data';
+import { formatMonth } from '../../lib/format';
+
+// Theses supervised at TU Darmstadt before the lab moved to Bremen (`archive: true` in
+// src/data/theses.yml). Kept for the record, without theme tags; the theses page lists only Bremen.
+const known = (d?: string) => (d && !d.startsWith('[') ? d : undefined);
+const theses = (await getTheses())
+  .filter((t) => t.archive)
+  .sort((a, b) => (known(b.date) ?? '0000').localeCompare(known(a.date) ?? '0000'));
+const groups = groupBy(theses, (t) => known(t.date)?.slice(0, 4) ?? 'Date open');
+---
+
+<BaseLayout
+  title="Thesis archive"
+  current="theses"
+  description="Theses supervised at TU Darmstadt, before the OWL-ML lab moved to Bremen."
+>
+  <PageHero
+    slot="band"
+    title="Thesis archive"
+    lead="Theses supervised at TU Darmstadt, before the lab moved to the University of Bremen."
+    crumbs={[{ label: 'Theses', href: '/theses/' }, { label: 'Archive' }]}
+  />
+  <div class="container page">
+    {groups.map(([label, items]) => (
+      <YearRail label={label} size="wide" level={2}>
+        {items.map((t) => (
+          <article class="thesis">
+            <h3>{t.title}</h3>
+            <p class="thesis-meta">
+              <span class="student">{t.student}</span>
+              <span class="degree" title={t.degree === 'BSc' ? 'Bachelor' : 'Master'}>
+                {t.degree}
+              </span>
+              {[known(t.date) && formatMonth(t.date!), t.institution, t.note]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          </article>
+        ))}
+      </YearRail>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: 48px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .thesis {
+    background: var(--white);
+    border-radius: var(--radius-card-sm);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .thesis h3 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.35;
+  }
+  .thesis-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    font-size: 14px;
+    color: var(--body);
+  }
+  .student {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .degree {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--teal-700);
+    color: var(--white);
+    padding: 2px 8px;
+    border-radius: var(--radius-label);
+  }
+  @media (max-width: 720px) {
+    .page {
+      padding-block: 28px 48px;
+    }
+  }
+</style>

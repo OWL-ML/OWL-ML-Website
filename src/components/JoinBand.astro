@@ -1,0 +1,70 @@
+---
+import Button from './Button.astro';
+
+// Peach "join us" band with the owl (homepage, teaching, theses).
+interface Props {
+  title: string;
+  text: string;
+  cta: string;
+  href: string;
+  /** owl height in px on desktop */
+  owl?: number;
+}
+const { title, text, cta, href, owl = 110 } = Astro.props;
+const headingId = 'join-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+---
+
+<section class="join" aria-labelledby={headingId}>
+  <img src="/brand/owl.svg" alt="" width="230" height="320" class="owl" style={`height:${owl}px`} />
+  <div class="text">
+    <h2 id={headingId}>{title}</h2>
+    <p>{text}</p>
+    <slot />
+  </div>
+  <Button href={href} variant="primary" class="cta">
+    {cta}
+  </Button>
+</section>
+
+<style>
+  .join {
+    background: var(--peach-200);
+    border-radius: 26px;
+    padding: 44px 48px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px 32px;
+  }
+  .owl {
+    width: auto;
+    flex: none;
+  }
+  .text {
+    flex: 1 1 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  h2 {
+    font-size: clamp(28px, 3vw, 36px);
+    color: var(--on-peach);
+  }
+  p {
+    color: var(--on-peach-muted);
+  }
+  @media (max-width: 720px) {
+    .join {
+      padding: 28px 24px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .owl {
+      height: 72px !important;
+    }
+    .join :global(.cta) {
+      width: 100%;
+    }
+  }
+</style>

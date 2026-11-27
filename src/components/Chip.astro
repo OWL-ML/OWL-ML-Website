@@ -1,0 +1,101 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// A pill. As a filter control it renders a real <button> with aria-pressed;
+// with href it is a link; otherwise a plain label.
+type Props = {
+  /** outline: white with teal outline (filters); tint: teal-200 fill (theme chips) */
+  variant?: 'outline' | 'tint';
+  /** Selected state: filled teal-700 (outline) or orange (tint, profile theme chips) */
+  active?: boolean;
+  as?: 'button' | 'span' | 'a';
+  href?: string;
+  size?: 'md' | 'sm' | 'lg';
+} & Omit<HTMLAttributes<'button'>, 'class'> & { class?: string };
+
+const {
+  variant = 'outline',
+  active = false,
+  as = 'button',
+  href,
+  size = 'md',
+  class: cls,
+  ...rest
+} = Astro.props;
+const classes = ['chip', `chip-${variant}`, `chip-${size}`, active && 'is-active', cls];
+---
+
+{as === 'button' ? (
+  <button type="button" class:list={classes} aria-pressed={active ? 'true' : 'false'} {...rest}>
+    <slot />
+  </button>
+) : as === 'a' ? (
+  <a href={href} class:list={classes} aria-current={active ? 'true' : undefined} {...rest}>
+    <slot />
+  </a>
+) : (
+  <span class:list={classes} {...rest}>
+    <slot />
+  </span>
+)}
+
+<style>
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    line-height: 1.3;
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+    text-decoration: none;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+  button.chip,
+  a.chip {
+    cursor: pointer;
+  }
+  .chip-sm {
+    font-size: 14px;
+    padding: 8px 14px;
+  }
+  .chip-md {
+    font-size: 15px;
+    padding: 9px 16px;
+  }
+  .chip-lg {
+    font-size: 16px;
+    padding: 12px 22px;
+  }
+  .chip-outline {
+    background: var(--white);
+    color: var(--ink);
+    border-color: var(--teal-300);
+  }
+  .chip-outline:hover {
+    border-color: var(--teal-500);
+  }
+  .chip-outline.is-active,
+  .chip-outline[aria-pressed='true'] {
+    background: var(--teal-700);
+    color: var(--white);
+    border-color: var(--teal-700);
+  }
+  .chip-tint {
+    background: var(--teal-200);
+    color: var(--teal-800);
+    border-color: var(--teal-200);
+  }
+  button.chip-tint:hover {
+    border-color: var(--teal-500);
+  }
+  .chip-tint.is-active,
+  .chip-tint[aria-pressed='true'] {
+    background: var(--orange);
+    color: var(--on-orange);
+    border-color: var(--orange);
+  }
+</style>

@@ -1,0 +1,134 @@
+---
+import Icon from '../Icon.astro';
+import NewsMore from './NewsMore.astro';
+import { subjectLink, hasBody, typeLabel, isClosed, type NewsEntry } from '../../lib/news';
+import { formatDate, formatDayMonth } from '../../lib/format';
+import { getPublications } from '../../lib/data';
+
+// An item in a news timeline: type icon, date, title, chips, a direct link to what it is about,
+// and its text behind "Read more". `anchor` gives it the id that /news/#<id> links point to.
+interface Props {
+  item: NewsEntry;
+  /** heading level of the title (4 under the news page's month rails) */
+  level?: 3 | 4;
+  anchor?: boolean;
+}
+const { item, level = 4, anchor = false } = Astro.props;
+const H = `h${level}` as 'h3' | 'h4';
+const d = item.data;
+const pub = d.paper ? (await getPublications()).find((p) => p.key === d.paper) : undefined;
+const target = subjectLink(item);
+const icon = (
+  {
+    paper: 'paper',
+    award: 'award',
+    people: 'person',
+    funding: 'funding',
+    opportunity: 'megaphone',
+    event: 'calendar',
+  } as const
+)[d.type];
+const tone = d.type === 'people' || d.type === 'opportunity' ? 'peach' : 'teal';
+const closed = isClosed(item);
+---
+
+<article
+  class:list={['row', closed && 'closed']}
+  data-type={d.type}
+  id={anchor ? item.id : undefined}
+>
+  <span class:list={['icon', tone]} aria-hidden="true">
+    <Icon name={icon} />
+  </span>
+  <div class="body">
+    <p class="meta">
+      {formatDayMonth(d.date)} · {typeLabel[d.type]}
+    </p>
+    <H class="title">{d.title}</H>
+    <div class="chips">
+      {pub && <span class="chip">{pub.venue_short}</span>}
+      {closed && (
+        <span class="chip chip-closed">Closed · deadline was {formatDate(d.deadline!)}</span>
+      )}
+      {target && (
+        <a href={target.href}>
+          {target.label} →<span class="sr-only">: {d.title}</span>
+        </a>
+      )}
+    </div>
+    {hasBody(item) && <NewsMore item={item} />}
+  </div>
+</article>
+
+<style>
+  .row {
+    background: var(--white);
+    border-radius: var(--radius-card-sm);
+    padding: 18px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .closed {
+    background: var(--teal-50);
+  }
+  .icon {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .teal {
+    background: var(--teal-200);
+    color: var(--teal-800);
+  }
+  .peach {
+    background: var(--peach-200);
+    color: var(--orange-ink);
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+  }
+  .row {
+    scroll-margin-top: 24px;
+  }
+  .title {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .chips a {
+    text-decoration: none;
+  }
+  .chips a:hover {
+    text-decoration: underline;
+  }
+  .chip {
+    background: var(--teal-200);
+    color: var(--teal-800);
+    font-size: 13px;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+  }
+  .chip-closed {
+    background: var(--hairline);
+    color: var(--body);
+    font-weight: 500;
+  }
+</style>
