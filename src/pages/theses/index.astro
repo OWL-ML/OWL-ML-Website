@@ -670,11 +670,27 @@ const mailto = contactEmail ? `mailto:${contactEmail}` : null;
     .panel {
       padding: 22px;
     }
+    /* the heading beside the owl, the rest below, as in the join bands (JoinBand.astro) */
     .include {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 12px 16px;
       padding: 24px;
     }
     .include .owl {
-      height: 72px;
+      height: 64px;
+    }
+    .include-text {
+      display: contents;
+    }
+    .include-text > :not(h3),
+    .include > :not(.owl, .include-text) {
+      grid-column: 1 / -1;
+    }
+    .include > :not(.owl, .include-text) {
+      justify-self: start;
+      margin-top: 8px;
     }
   }
 </style>
