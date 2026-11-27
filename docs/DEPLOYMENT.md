@@ -2,14 +2,17 @@
 
 The site is a folder of static files (`dist/`) produced by `npm run build`. It is published with
 **GitHub Pages** by the workflow `.github/workflows/deploy-pages.yml`, which builds `main` and
-uploads the result. Before the launch it runs only when started by hand (Actions → Deploy to
-GitHub Pages → Run workflow); after the launch on every merge to `main`.
+uploads the result, on every merge to `main`. It can also be started by hand (Actions → Deploy to
+GitHub Pages → Run workflow). It builds for the custom domain set in Settings → Pages, so
+canonical links, the sitemap and share images always match the address the site is served at.
+Changing that domain does not rebuild the site: run the workflow by hand once afterwards.
 
 ## Address and DNS
 
 - Main address: `https://owl-ml.com`, set in `src/lib/site-url.ts` (canonical links, sitemap,
-  share images). A build can override it with the environment variable `SITE_URL`; the deploy
-  workflow has a field for that when started by hand.
+  share images) for local builds. A build can override it with the environment variable
+  `SITE_URL`; the deploy workflow sets it to the Pages custom domain, and has a field to build for
+  another address when started by hand.
 - DNS for `owl-ml.com` is hosted at **Bluehost** (name servers `ns1/ns2.bluehost.com`), which also
   hosts the old WordPress site and the `@owl-ml.com` email (`mail.owl-ml.com`). Keep the Bluehost
   account: cancelling it would also take down the domain's DNS and email.
@@ -40,20 +43,23 @@ domain for your GitHub Pages site") before changing DNS, in case they change.
 - At Bluehost, add a CNAME `new` → `owl-ml.github.io`.
 - Repository settings → Pages → custom domain `new.owl-ml.com`. Once the certificate is issued,
   tick **Enforce HTTPS**.
-- Actions → Deploy to GitHub Pages → Run workflow, with `https://new.owl-ml.com` as the address,
-  so that share images and absolute links point to the test copy. Test there.
+- Actions → Deploy to GitHub Pages → Run workflow (address field empty: it builds for the custom
+  domain, `https://new.owl-ml.com`). Test there. From now on every merge updates the test copy.
 
 **2. Switch `owl-ml.com` to GitHub Pages** (15 minutes, plus up to an hour until HTTPS works)
 
-- A day before: at Bluehost, lower the TTL of the `owl-ml.com` and `www` records to 300 seconds,
-  so the change spreads quickly.
-- Run the deploy workflow with the address field empty (builds for `https://owl-ml.com`).
-- Repository settings → Pages → custom domain `owl-ml.com`.
+- At least 4 hours before (the longest TTL there was 4 hours): at Bluehost, lower the TTL of the
+  `owl-ml.com` (A) and `www` (CNAME) records to 15 minutes, Bluehost's shortest, so the change
+  spreads quickly. Point `webmail`, `cpanel` and `ftp`, which Bluehost created as CNAMEs to
+  `owl-ml.com`, to `mail.owl-ml.com` instead, so they stay on the Bluehost server. Bluehost's name
+  servers can take a while to agree: check with `dig <name> @ns1.bluehost.com` (and `ns2`), asking
+  several times.
+- Repository settings → Pages → custom domain `owl-ml.com`. Then run the deploy workflow by hand,
+  address field empty: it now builds for `https://owl-ml.com`.
 - At Bluehost: `owl-ml.com` A records → GitHub's four addresses (and AAAA → the IPv6 ones);
   `www` CNAME → `owl-ml.github.io` (GitHub redirects `www` to `owl-ml.com`). Leave the email
   records (MX, `mail`, the SPF TXT record) unchanged.
 - Once the certificate is issued, tick **Enforce HTTPS**. Remove the `new` record.
-- Add `push: branches: [main]` to the deploy workflow, so every merge goes live.
 - If something goes badly wrong: point the records back to Bluehost (162.241.219.107 in November
   2026); the old site returns within the TTL.
 
@@ -76,14 +82,15 @@ university server that redirects it the same way.
 
 ## Moving the main address to `owl-ml.uni-bremen.de` later
 
-Possible at any time; nothing in the site depends on the address except `src/lib/site-url.ts`.
+Possible at any time; nothing in the site depends on the address except `src/lib/site-url.ts`
+(for local builds) and the Pages custom domain (for the deployed site).
 
 1. Ask ZfN for a CNAME `owl-ml.uni-bremen.de` → `owl-ml.github.io`, and for the TXT record that
    verifies the domain for the organisation (organisation settings → Pages). If `uni-bremen.de`
    has a CAA record, it must allow `letsencrypt.org`.
 2. Change the address in `src/lib/site-url.ts` (one pull request).
-3. Repository settings → Pages → custom domain `owl-ml.uni-bremen.de`; tick **Enforce HTTPS** once
-   the certificate is issued.
+3. Repository settings → Pages → custom domain `owl-ml.uni-bremen.de`, then run the deploy
+   workflow by hand; tick **Enforce HTTPS** once the certificate is issued.
 4. Redirect `owl-ml.com` and `www` to the new address, keeping the path: point them to the
    Bluehost server again, with the `.htaccess` above changed accordingly (condition
    `^(www\.)?owl-ml\.com$`, target `https://owl-ml.uni-bremen.de`).

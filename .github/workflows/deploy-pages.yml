@@ -1,17 +1,17 @@
 name: Deploy to GitHub Pages
 
-# Publishes the built site with GitHub Pages (docs/DEPLOYMENT.md). For now it only runs
-# when started by hand (Actions → Deploy to GitHub Pages → Run workflow), and it can only succeed
-# once the repository is public and Pages is switched on (Settings → Pages → Source: GitHub
-# Actions). After the switch to owl-ml.com, add `push: branches: [main]` below so every merge
-# goes live.
+# Publishes the built site with GitHub Pages (docs/DEPLOYMENT.md) on every merge to `main`, or
+# when started by hand (Actions → Deploy to GitHub Pages → Run workflow). The site is built for
+# the custom domain set in Settings → Pages, so absolute links, the sitemap and share images
+# always match the address the site is served at; changing that domain needs one run by hand.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       site_url:
         description: >-
-          Address to build for, e.g. https://new.owl-ml.com while testing. Leave empty for the
-          site's address (src/lib/site-url.ts).
+          Address to build for. Leave empty for the custom domain set in Settings → Pages.
         required: false
         default: ''
 
@@ -39,10 +39,13 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # reads the Pages settings; `origin` is the custom domain, e.g. https://owl-ml.com
+      - id: pages
+        uses: actions/configure-pages@v6
       - name: Build (checks all content; absolute links, sitemap and share images use the address)
         run: npm run build
         env:
-          SITE_URL: ${{ inputs.site_url }}
+          SITE_URL: ${{ inputs.site_url || steps.pages.outputs.origin }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist/
